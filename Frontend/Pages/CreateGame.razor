@@ -6,7 +6,15 @@
 
 <div class="create-game-container">
     <label>Namn på spel</label>
-    <input class="game" @bind="game" placeholder="Skriv in namnet på din sport/ditt spel här"></input>
+    <input class="game" 
+           @bind="game" 
+           placeholder="Skriv in namnet på din sport/ditt spel här" />
+    
+    <label>Startpoäng för spelare</label>
+    <input class="starting-points" 
+           @bind="startingPoints" />
+        
+    
 </div>
 
 <button class="create-game-button" @onclick="CreateNewGame">Skapa match</button>
@@ -14,7 +22,8 @@
 @code {
 
     string game = "";
-    Guid id = Guid.NewGuid();
+    int startingPoints = 0; //sätter en default till 0
+    Guid id = Guid.NewGuid(); //denna logik bör ligga på servern?
     //var url = $"/nånting/id"; - när vi bestämt hur vi ska göra med namngivning av sidor
     
     void CreateNewGame()
