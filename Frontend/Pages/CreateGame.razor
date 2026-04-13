@@ -13,7 +13,12 @@
     <label>Startpoäng för spelare</label>
     <input class="starting-points" 
            @bind="startingPoints" />
-        
+    
+    <label >Vad är målet för spelet?</label>
+    <select class="order-by-points" @bind="orderByPoints">
+        <option value="max">Få så många poäng som möjligt</option>
+        <option value="min">Få så några poäng som möjligt</option>
+    </select>
     
 </div>
 
@@ -23,6 +28,8 @@
 
     string game = "";
     int startingPoints = 0; //sätter en default till 0
+    string orderByPoints = "max"; //sätter default till "max"
+    
     Guid id = Guid.NewGuid(); //denna logik bör ligga på servern?
     //var url = $"/nånting/id"; - när vi bestämt hur vi ska göra med namngivning av sidor
     
