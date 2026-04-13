@@ -1,0 +1,26 @@
+﻿@page "/createGame"
+
+<PageTitle>Skapa match</PageTitle>
+
+<h1>Mitt spel</h1>
+
+<div class="create-game-container">
+    <label>Namn på spel</label>
+    <input class="game" @bind="game" placeholder="Skriv in namnet på din sport/ditt spel här"></input>
+</div>
+
+<button class="create-game-button" @onclick="CreateNewGame">Skapa match</button>
+
+@code {
+
+    string game = "";
+    Guid id = Guid.NewGuid();
+    //var url = $"/nånting/id"; - när vi bestämt hur vi ska göra med namngivning av sidor
+    
+    void CreateNewGame()
+    {
+        //TODO: Skriv logik för att skapa ny match
+        
+        //Nav.NavigateTo(url) --navigera till den url som skapats
+    }
+}
