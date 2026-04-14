@@ -109,7 +109,7 @@ app.MapPost("/api/match/{id}/clone", (string id, MatchStore store) =>
             PlayerNames = match.Players.Select(p => p.Name).ToList()
         };
         var clonedMatch = store.CreateMatch(cloneRequest);
-        var url = $"/api/match/{clonedMatch.Id}";
+        var url = $"/match/{clonedMatch.Id}";
         return Results.Created(url, new MatchResponseDto
         {
             Id = clonedMatch.Id,
