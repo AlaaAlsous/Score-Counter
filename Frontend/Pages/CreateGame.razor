@@ -51,7 +51,7 @@
     </ul>
     
     <p>Kryssa i rutan om du vill spärra möjlighet att lägga till fler spelare när matchen startats</p>
-    <InputCheckbox @bind-value="_playersLocked"></InputCheckbox>
+    <InputCheckbox @bind-value="_playersLocked" disabled="@(_playerNames.Count <= 0)"></InputCheckbox>
 </div>
 
 <button class="create-game-button" @onclick="CreateNewGame">Skapa match</button>
