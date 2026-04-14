@@ -25,4 +25,14 @@ public class MatchStore
         _matches[match.id] = match;
         return match;
     }
+
+    public bool TryGetMatch(string id, out GameMatch? match)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            match = null;
+            return false;
+        }
+        return _matches.TryGetValue(id, out match);
+    }
 }
