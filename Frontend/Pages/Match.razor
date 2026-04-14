@@ -70,4 +70,23 @@ else
             </tbody>
         </table>
     }
+
+    @if (!match.PlayersLocked)
+    {
+        <h4>Lägg till spelare</h4>
+        <input @bind="newPlayerName" placeholder="Spelarnamn" />
+        <button @onclick="AddPlayer">Lägg till</button>
+    }
+
+    <hr />
+
+    <button @onclick="ResetMatch">Återställ match</button>
+    <button @onclick="CloneMatch">Klona match</button>
+    <button @onclick="DeleteMatch">Ta bort match</button>
+
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <p style="color: green;">@statusMessage</p>
+    }
 }
+
