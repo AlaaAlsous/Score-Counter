@@ -170,9 +170,28 @@ app.MapPut("/api/match/{id}/player/{playerId}/name", (string id, string playerId
     return Results.NotFound("Matchen hittades inte.");
 });
 
-//TODOS
-// PUT /api/match/{id}/player/{playerId}/name – Byt namn på spelare
-// DELETE /api/match/{id}/player/{playerId} – Ta bort spelare
+app.MapDelete("/api/match/{id}/player/{playerId}", (string id, string playerId, MatchStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(id))
+        return Results.BadRequest("Matchen ID är required.");
+    if (string.IsNullOrWhiteSpace(playerId))
+        return Results.BadRequest("Spelarens ID är required.");
+
+    if (store.TryGetMatch(id, out var match))
+    {
+        lock (match!)
+        {
+            var player = match.Players.FirstOrDefault(p => p.Id.ToString() == playerId);
+            if (player == null)
+                return Results.NotFound("Spelaren hittades inte i matchen.");
+
+            match.Players.Remove(player);
+            store.UpdateMatch(id, match);
+            return Results.Ok(player);
+        }
+    }
+    return Results.NotFound("Matchen hittades inte.");
+});
 
 app.MapFallbackToFile("index.html");
 
