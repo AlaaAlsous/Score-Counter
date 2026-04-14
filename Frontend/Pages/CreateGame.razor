@@ -22,7 +22,8 @@
     
     <label>Lägg till spelare</label>
     <input class="player"
-           @bind="player" />
+           @bind="player"
+           @onkeyup="HandleKey"/>
     <button
         class="add-player-button"
         @onclick="AddPlayer">Lägg till</button>
@@ -59,5 +60,13 @@
         //TODO: Skriv logik för att skapa ny match
         
         //Nav.NavigateTo(url) --navigera till den url som skapats
+    }
+
+    void HandleKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddPlayer();
+        }
     }
 }
