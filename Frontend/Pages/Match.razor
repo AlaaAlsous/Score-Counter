@@ -90,3 +90,171 @@ else
     }
 }
 
+@code {
+    [Parameter]
+    public string id { get; set; } = string.Empty;
+
+    private GameMatch? match;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string newPlayerName = string.Empty;
+    private string statusMessage = string.Empty;
+
+    private IEnumerable<GamePlayer> SortedPlayers =>
+        match is null
+            ? Enumerable.Empty<GamePlayer>()
+            : match.HighScoreWins
+                ? match.Players.OrderByDescending(p => p.Score)    
+                : match.Players.OrderBy(p => p.Score);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMatch();
+    }
+
+    private async Task LoadMatch()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            statusMessage = string.Empty;
+
+            match = await Http.GetFromJsonAsync<GameMatch>($"/api/match/{Id}");
+
+            if (match is null)
+            {
+                errorMessage = "Matchen kunde inte laddas.";
+            }
+        }
+        catch
+        {
+            errorMessage = "Kunde inte hämta matchen.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ChangeScore(GamePlayer player, int delta)
+    {
+        var newScore = player.Score + delta;
+        await SetPlayerScore(player, newScore);
+    }
+
+    private async Task UpdatePlayerScore(GamePlayer player, string value)
+    {
+        if (int.TryParse(value, out var newScore))
+        {
+            await SetPlayerScore(player, newScore);
+        }
+    }
+
+    private async Task SetPlayerScore(GamePlayer player, int newScore)
+    {
+        var response = await Http.PutAsync($"/api/match/{Id}/player/{player.Id}/score?newScore={newScore}", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            player.Score = newScore;
+            statusMessage = "Poängen uppdaterades.";
+        }
+        else
+        {
+            errorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    private async Task UpdatePlayerName(GamePlayer player, string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+            return;
+
+        var response = await Http.PutAsync($"/api/match/{Id}/player/{player.Id}/name?newName={Uri.EscapeDataString(newName)}", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            player.Name = newName.Trim();
+            statusMessage = "Namnet uppdaterades.";
+        }
+        else
+        {
+            errorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    private async Task AddPlayer()
+    {
+        if (string.IsNullOrWhiteSpace(newPlayerName))
+            return;
+
+        var response = await Http.PostAsync($"/api/match/{Id}/player?playerName={Uri.EscapeDataString(newPlayerName)}", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            newPlayerName = string.Empty;
+            statusMessage = "Spelaren lades till.";
+            await LoadMatch();
+        }
+        else
+        {
+            errorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    private async Task RemovePlayer(GamePlayer player)
+    {
+        var response = await Http.DeleteAsync($"/api/match/{Id}/player/{player.Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            statusMessage = "Spelaren togs bort.";
+            await LoadMatch();
+        }
+        else
+        {
+            errorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    private async Task ResetMatch()
+    {
+        var response = await Http.PostAsync($"/api/match/{Id}/reset", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            statusMessage = "Matchen startades om.";
+            await LoadMatch();
+        }
+        else
+        {
+            errorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    private async Task CloneMatch()
+    {
+        var response = await Http.PostAsync($"/api/match/{Id}/clone", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<CloneResponse>();
+
+            if (result is not null && !string.IsNullOrWhiteSpace(result.Url))
+            {
+                Nav.NavigateTo(result.Url);
+            }
+        }
+        else
+        {
+            errorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    private class CloneResponse
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Url { get; set; } = string.Empty;
+    }
+}
