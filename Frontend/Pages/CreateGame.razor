@@ -6,30 +6,42 @@
 
 <div class="create-game-container">
     <label>Namn på spel</label>
-    <input class="game" 
-           @bind="game" 
+    <input class="game-name" 
+           @bind="_gameName" 
            placeholder="Skriv in namnet på din sport/ditt spel här" />
     
     <label>Startpoäng för spelare</label>
     <input class="starting-points" 
-           @bind="startingPoints" />
+           @bind="_startingPoints" />
     
     <label>Vad är målet för spelet?</label>
-    <select class="order-by-points" @bind="orderByPoints">
+    <select class="order-by-points" @bind="_orderByPoints">
         <option value="max">Få så många poäng som möjligt</option>
         <option value="min">Få så några poäng som möjligt</option>
     </select>
     
+    <label>Max antal spelare</label>
+    <input
+        class="max-players"
+        @bind="_maxPlayers"/>
+    
+    @if (_playerNames.Count >= _maxPlayers)
+    {
+        <p>Max antal spelare är tillagda!</p>
+    }
+    
     <label>Lägg till spelare</label>
     <input class="player"
-           @bind="player"
-           @onkeyup="HandleKey"/>
+           @bind="_player"
+           @onkeyup="HandleKey"
+           disabled="@(_playerNames.Count >= _maxPlayers)"/>
     <button
         class="add-player-button"
-        @onclick="AddPlayer">Lägg till</button>
+        @onclick="AddPlayer"
+        disabled="@(_playerNames.Count >= _maxPlayers)">Lägg till</button>
     
     <ul>
-        @foreach (var name in playerNames)
+        @foreach (var name in _playerNames)
         {
             <li>@name</li>
         }
@@ -40,18 +52,23 @@
 
 @code {
 
-    string game = "";
-    int startingPoints = 0; //sätter en default till 0
-    string orderByPoints = "max"; //sätter default till "max"
-    string player = "";
-    List<string> playerNames = [];
+    string _gameName = "";
+    int _startingPoints;
+    string _orderByPoints = "max"; //sätter default till "max"
+    string _player = "";
+    readonly List<string> _playerNames = [];
+    int _maxPlayers = 4;
     
     void AddPlayer()
     {
-        if (!string.IsNullOrWhiteSpace(player))
+        if (_playerNames.Count >= _maxPlayers)
         {
-            playerNames.Add(player);
-            player = "";
+            return;
+        }
+        if (!string.IsNullOrWhiteSpace(_player))
+        {
+            _playerNames.Add(_player);
+            _player = "";
         }
     }
     
