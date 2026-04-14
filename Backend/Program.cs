@@ -27,7 +27,14 @@ app.MapPost("/api/match", (MatchRequestDto request, MatchStore store) =>
     if (string.IsNullOrWhiteSpace(request.GameName))
         return Results.BadRequest("GameName is required.");
     var match = store.CreateMatch(request);
-    return Results.Created($"/api/match/{match.id}", match);
+
+    var url = $"/api/match/{match.Id}";
+    
+    return Results.Created(url, new MatchResponseDto
+    {
+        Id = match.Id, 
+        Url = url
+    });
 });
 
 app.MapGet("/api/match/{id}", (string id, MatchStore store) =>

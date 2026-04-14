@@ -22,7 +22,7 @@ public class MatchStore
                                         .ToList() ?? new List<GamePlayer>()
         };
 
-        _matches[match.id] = match;
+        _matches[match.Id] = match;
         return match;
     }
 

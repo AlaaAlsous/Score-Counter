@@ -1,5 +1,7 @@
 ﻿@page "/createGame"
 @using Shared
+@inject HttpClient Http
+@inject NavigationManager NavManager
 
 <PageTitle>Skapa match</PageTitle>
 
@@ -76,8 +78,8 @@
             _player = "";
         }
     }
-    
-    void CreateNewGame()
+
+    async Task CreateNewGame()
     {
         var game = new MatchRequestDto
         {
@@ -88,10 +90,22 @@
             StartScore = _startScore,
             PlayerNames = _playerNames
         };
-        
-        
 
-        //Nav.NavigateTo(url) --navigera till den url som skapats
+        var response = await Http.PostAsJsonAsync("api/match", game);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var createdGame = await response.Content.ReadFromJsonAsync<MatchResponseDto>();
+            
+            if (createdGame != null)
+            {
+                NavManager.NavigateTo(createdGame.Url);
+            }
+            else
+            {
+                NavManager.NavigateTo("/");
+            }
+        }
     }
 
     void HandleKey(KeyboardEventArgs e)
