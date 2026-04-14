@@ -65,12 +65,37 @@ app.MapPost("/api/match/{id}/reset", (string id, MatchStore store) =>
     return Results.NotFound("Match not found.");
 });
 
+app.MapPost("/api/match/{id}/player", (string id, string playerName, MatchStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(id))
+        return Results.BadRequest("Match ID is required.");
+    if (string.IsNullOrWhiteSpace(playerName))
+        return Results.BadRequest("Player name is required.");
+
+    if (store.TryGetMatch(id, out var match))
+    {
+        lock (match!)
+        {
+            if (match.PlayersLocked)
+                return Results.BadRequest("Players are locked for this match.");
+            if (match.Players.Count >= match.MaxPlayers)
+                return Results.BadRequest("Match is full.");
+            if (match.Players.Any(p => p.Name.Equals(playerName, StringComparison.OrdinalIgnoreCase)))
+                return Results.BadRequest("Player name already exists in this match.");
+
+            var newPlayer = new GamePlayer { Name = playerName.Trim(), Score = match.StartScore };
+            match.Players.Add(newPlayer);
+            store.UpdateMatch(id, match);
+            return Results.Ok(newPlayer);
+        }
+    }
+    return Results.NotFound("Match not found.");
+});
 
 //TODOS
 // PUT /api/match/{id}/player/{playerId}/score – Uppdatera poäng
 // PUT /api/match/{id}/player/{playerId}/name – Byt namn på spelare
 // POST /api/match/{id}/player – Lägg till spelare
-// POST /api/match/{id}/reset – Starta om matchen (nollställ poäng)
 // POST /api/match/{id}/clone – Skapa en ny match med samma inställningar
 // DELETE /api/match/{id}/player/{playerId} – Ta bort spelare
 
