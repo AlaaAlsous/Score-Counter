@@ -1,3 +1,5 @@
+using Backend.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
@@ -8,6 +10,7 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+builder.Services.AddSingleton<MatchStore>();
 
 var app = builder.Build();
 
