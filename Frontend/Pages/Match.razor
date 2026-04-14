@@ -76,19 +76,23 @@ else
     {
         <h4>Lägg till spelare</h4>
         <input @bind="newPlayerName" placeholder="Spelarnamn" />
-        <button @onclick="AddPlayer">Lägg till</button>
+        <button type="button" @onclick="AddPlayer">Lägg till</button>
     }
 
     <hr />
 
-    <button @onclick="ResetMatch">Återställ match</button>
-    <button @onclick="CloneMatch">Klona match</button>
-    @* <button @onclick="DeleteMatch">Ta bort match</button> Implement later *@
+    <button type="button"@onclick="ResetMatch">Återställ match</button>
+    <button type="button" @onclick="CloneMatch">Klona match</button>
+    @* <button type="button" @onclick="DeleteMatch">Ta bort match</button> Implement later *@
 
     @if (!string.IsNullOrWhiteSpace(statusMessage))
     {
         <p style="color: green;">@statusMessage</p>
     }
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
 }
 
 @code {
@@ -111,6 +115,14 @@ else
     protected override async Task OnInitializedAsync()
     {
         await LoadMatch();
+    }
+
+    private bool showErrorPopup = false;
+
+    private void CloseErrorPopup()
+    {
+        showErrorPopup = false;
+        errorMessage = string.Empty;
     }
 
     private async Task LoadMatch()
@@ -201,6 +213,7 @@ else
         else
         {
             errorMessage = await response.Content.ReadAsStringAsync();
+            showErrorPopup = true;
         }
     }
 
@@ -216,6 +229,7 @@ else
         else
         {
             errorMessage = await response.Content.ReadAsStringAsync();
+            showErrorPopup = true;
         }
     }
 
@@ -231,6 +245,7 @@ else
         else
         {
             errorMessage = await response.Content.ReadAsStringAsync();
+            showErrorPopup = true;
         }
     }
 
@@ -250,6 +265,7 @@ else
         else
         {
             errorMessage = await response.Content.ReadAsStringAsync();
+            showErrorPopup = true;
         }
     }
 
@@ -258,4 +274,15 @@ else
         public string Id { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
     }
+}
+
+@if (showErrorPopup)
+{
+    <div class="popup-backdrop">
+        <div class="popup-box">
+            <h4>Fel</h4>
+            <p>@errorMessage</p>
+            <button type="button" @onclick="CloseErrorPopup">OK</button>
+        </div>
+    </div>
 }
