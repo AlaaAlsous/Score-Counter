@@ -22,6 +22,15 @@ app.UseCors();
 
 app.MapGet("/api/test", () => "test");
 
+app.MapGet("/api/match/{id}", (string id, MatchStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(id))
+        return Results.BadRequest("Match ID is required.");
+    if (store.TryGetMatch(id, out var match))
+        return Results.Ok(match);
+    return Results.NotFound("Match not found.");
+});
+
 app.MapPost("/api/match", (MatchRequestDto request, MatchStore store) =>
 {
     if (string.IsNullOrWhiteSpace(request.GameName))
@@ -37,14 +46,25 @@ app.MapPost("/api/match", (MatchRequestDto request, MatchStore store) =>
     });
 });
 
-app.MapGet("/api/match/{id}", (string id, MatchStore store) =>
+app.MapPost("/api/match/{id}/reset", (string id, MatchStore store) =>
 {
     if (string.IsNullOrWhiteSpace(id))
         return Results.BadRequest("Match ID is required.");
     if (store.TryGetMatch(id, out var match))
+    {
+        lock (match!)
+        {
+            foreach (var player in match.Players)
+            {
+                player.Score = match.StartScore;
+            }
+        }
+        store.UpdateMatch(id, match);
         return Results.Ok(match);
-    return Results.NotFound();
+    }
+    return Results.NotFound("Match not found.");
 });
+
 
 //TODOS
 // PUT /api/match/{id}/player/{playerId}/score – Uppdatera poäng
