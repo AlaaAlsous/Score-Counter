@@ -30,8 +30,16 @@ app.MapPost("/api/match", (MatchRequestDto request, MatchStore store) =>
     return Results.Created($"/api/match/{match.id}", match);
 });
 
+app.MapGet("/api/match/{id}", (string id, MatchStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(id))
+        return Results.BadRequest("Match ID is required.");
+    if (store.TryGetMatch(id, out var match))
+        return Results.Ok(match);
+    return Results.NotFound();
+});
+
 //TODOS
-// GET /api/match/{id} – Hämta en match
 // PUT /api/match/{id}/player/{playerId}/score – Uppdatera poäng
 // PUT /api/match/{id}/player/{playerId}/name – Byt namn på spelare
 // POST /api/match/{id}/player – Lägg till spelare
