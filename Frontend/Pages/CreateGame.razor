@@ -1,4 +1,5 @@
 ﻿@page "/createGame"
+@using Shared
 
 <PageTitle>Skapa match</PageTitle>
 
@@ -15,10 +16,10 @@
            @bind="_startScore" />
     
     <label>Vad är målet för spelet?</label>
-    <select class="order-by-points" @bind="_highScoreWins">
-        <option value="max">Få så många poäng som möjligt</option>
-        <option value="min">Få så några poäng som möjligt</option>
-    </select>
+    <InputSelect class="order-by-points" @bind-Value="_highScoreWins">
+        <option value="true">Få så många poäng som möjligt</option>
+        <option value="false">Få så några poäng som möjligt</option>
+    </InputSelect>
     
     <label>Max antal spelare</label>
     <input
@@ -46,6 +47,9 @@
             <li>@name</li>
         }
     </ul>
+    
+    <p>Kryssa i rutan om du vill spärra möjlighet att lägga till fler spelare när matchen startats</p>
+    <InputCheckbox @bind-value="_playersLocked"></InputCheckbox>
 </div>
 
 <button class="create-game-button" @onclick="CreateNewGame">Skapa match</button>
@@ -54,10 +58,11 @@
 
     string _gameName = "";
     int _startScore;
-    string _highScoreWins = "max"; //sätter default till "max"
+    bool _highScoreWins = true;
     string _player = "";
     readonly List<string> _playerNames = [];
     int _maxPlayers = 4;
+    bool _playersLocked;
     
     void AddPlayer()
     {
@@ -74,8 +79,18 @@
     
     void CreateNewGame()
     {
-        //TODO: Skriv logik för att skapa ny match
+        var game = new MatchRequestDto
+        {
+            GameName = _gameName,
+            HighScoreWins = _highScoreWins,
+            MaxPlayers = _maxPlayers,
+            PlayersLocked = _playersLocked,
+            StartScore = _startScore,
+            PlayerNames = _playerNames
+        };
         
+        
+
         //Nav.NavigateTo(url) --navigera till den url som skapats
     }
 
