@@ -11,10 +11,6 @@
 {
     <p>Laddar matchinformation...</p>
 }
-else if (!string.IsNullOrEmpty(errorMessage))
-{
-    <p style="color: red;">@errorMessage</p>
-}
 else if (match is null)
 {
     <p>Matchen hittades inte.</p>
@@ -52,18 +48,21 @@ else
                 {
                     <tr>
                         <td>
-                            <input value="@player.Name" @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
+                            <input value="@player.Name"
+                                   @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
                         </td>
                         <td>
-                            <input type="number" value="@player.Score" @onchange="e => UpdatePlayerScore(player, e.Value?.ToString() ?? 0.ToString())" />
+                            <input type="number"
+                                   value="@player.Score"
+                                   @onchange="e => UpdatePlayerScore(player, e.Value?.ToString() ?? 0.ToString())" />
                         </td>
                         <td>
-                            <button @onclick="() => ChangeScore(player, -1)">-1</button>
-                            <button @onclick="() => ChangeScore(player, 1)">+1</button>
+                            <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
+                            <button type="button" @onclick="() => ChangeScore(player, 1)">+1</button>
 
                             @if (!match.PlayersLocked)
                             {
-                                <button @onclick="() => RemovePlayer(player)">Ta bort</button>
+                                <button type="button" @onclick="() => RemovePlayer(player)">Ta bort</button>
                             }
                         </td>
                     </tr>
@@ -81,18 +80,25 @@ else
 
     <hr />
 
-    <button type="button"@onclick="ResetMatch">Återställ match</button>
+    <button type="button" @onclick="ResetMatch">Återställ match</button>
     <button type="button" @onclick="CloneMatch">Klona match</button>
-    @* <button type="button" @onclick="DeleteMatch">Ta bort match</button> Implement later *@
+    @* <button type="button" @onclick="DeleteMatch">Ta bort match</button> *@
 
     @if (!string.IsNullOrWhiteSpace(statusMessage))
     {
         <p style="color: green;">@statusMessage</p>
     }
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-{
-    <p style="color: red;">@errorMessage</p>
 }
+
+@if (showErrorPopup)
+{
+    <div class="popup-backdrop">
+        <div class="popup-box">
+            <h4>Fel</h4>
+            <p>@errorMessage</p>
+            <button type="button" @onclick="CloseErrorPopup">OK</button>
+        </div>
+    </div>
 }
 
 @code {
@@ -101,6 +107,7 @@ else
 
     private GameMatch? match;
     private bool isLoading = true;
+    private bool showErrorPopup = false;
     private string errorMessage = string.Empty;
     private string newPlayerName = string.Empty;
     private string statusMessage = string.Empty;
@@ -109,15 +116,13 @@ else
         match is null
             ? Enumerable.Empty<GamePlayer>()
             : match.HighScoreWins
-                ? match.Players.OrderByDescending(p => p.Score)    
+                ? match.Players.OrderByDescending(p => p.Score)
                 : match.Players.OrderBy(p => p.Score);
 
     protected override async Task OnInitializedAsync()
     {
         await LoadMatch();
     }
-
-    private bool showErrorPopup = false;
 
     private void CloseErrorPopup()
     {
@@ -130,24 +135,29 @@ else
         try
         {
             isLoading = true;
-            errorMessage = string.Empty;
             statusMessage = string.Empty;
 
             match = await Http.GetFromJsonAsync<GameMatch>($"/api/match/{Id}");
 
             if (match is null)
             {
-                errorMessage = "Matchen kunde inte laddas.";
+                ShowError("Matchen kunde inte laddas.");
             }
         }
         catch
         {
-            errorMessage = "Kunde inte hämta matchen.";
+            ShowError("Kunde inte hämta matchen.");
         }
         finally
         {
             isLoading = false;
         }
+    }
+
+    private void ShowError(string message)
+    {
+        errorMessage = message;
+        showErrorPopup = true;
     }
 
     private async Task ChangeScore(GamePlayer player, int delta)
@@ -162,6 +172,10 @@ else
         {
             await SetPlayerScore(player, newScore);
         }
+        else
+        {
+            ShowError("Ogiltigt poängvärde.");
+        }
     }
 
     private async Task SetPlayerScore(GamePlayer player, int newScore)
@@ -175,14 +189,17 @@ else
         }
         else
         {
-            errorMessage = await response.Content.ReadAsStringAsync();
+            ShowError(await response.Content.ReadAsStringAsync());
         }
     }
 
     private async Task UpdatePlayerName(GamePlayer player, string newName)
     {
         if (string.IsNullOrWhiteSpace(newName))
+        {
+            ShowError("Spelarnamnet får inte vara tomt.");
             return;
+        }
 
         var response = await Http.PutAsync($"/api/match/{Id}/player/{player.Id}/name?newName={Uri.EscapeDataString(newName)}", null);
 
@@ -193,14 +210,17 @@ else
         }
         else
         {
-            errorMessage = await response.Content.ReadAsStringAsync();
+            ShowError(await response.Content.ReadAsStringAsync());
         }
     }
 
     private async Task AddPlayer()
     {
         if (string.IsNullOrWhiteSpace(newPlayerName))
+        {
+            ShowError("Ange ett spelarnamn.");
             return;
+        }
 
         var response = await Http.PostAsync($"/api/match/{Id}/player?playerName={Uri.EscapeDataString(newPlayerName)}", null);
 
@@ -212,8 +232,7 @@ else
         }
         else
         {
-            errorMessage = await response.Content.ReadAsStringAsync();
-            showErrorPopup = true;
+            ShowError(await response.Content.ReadAsStringAsync());
         }
     }
 
@@ -228,8 +247,7 @@ else
         }
         else
         {
-            errorMessage = await response.Content.ReadAsStringAsync();
-            showErrorPopup = true;
+            ShowError(await response.Content.ReadAsStringAsync());
         }
     }
 
@@ -244,8 +262,7 @@ else
         }
         else
         {
-            errorMessage = await response.Content.ReadAsStringAsync();
-            showErrorPopup = true;
+            ShowError(await response.Content.ReadAsStringAsync());
         }
     }
 
@@ -261,11 +278,14 @@ else
             {
                 Nav.NavigateTo(result.Url);
             }
+            else
+            {
+                ShowError("Kunde inte öppna den klonade matchen.");
+            }
         }
         else
         {
-            errorMessage = await response.Content.ReadAsStringAsync();
-            showErrorPopup = true;
+            ShowError(await response.Content.ReadAsStringAsync());
         }
     }
 
@@ -274,15 +294,4 @@ else
         public string Id { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
     }
-}
-
-@if (showErrorPopup)
-{
-    <div class="popup-backdrop">
-        <div class="popup-box">
-            <h4>Fel</h4>
-            <p>@errorMessage</p>
-            <button type="button" @onclick="CloseErrorPopup">OK</button>
-        </div>
-    </div>
-}
+}y
