@@ -35,4 +35,20 @@ public class MatchStore
         }
         return _matches.TryGetValue(id, out match);
     }
+
+    public bool UpdateMatch(string id, GameMatch match)
+    {
+        if (string.IsNullOrWhiteSpace(id) || match == null)
+            return false;
+
+        if (_matches.TryGetValue(id, out var existingMatch))
+        {
+            lock (existingMatch)
+            {
+                _matches[id] = match;
+            }
+            return true;
+        }   
+        return false;
+    }
 }
