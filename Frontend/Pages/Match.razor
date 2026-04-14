@@ -1,4 +1,4 @@
-@page "/match/{Id}"
+@page "/match/{id}"
 @inject HttpClient Http
 
 <h2>Match!</h2>
@@ -11,7 +11,7 @@ TODO: lägga in fält/tabell som visar info från match från backend*@
 
     protected override async Task OnInitializedAsync()
     {
-        var response = Http.GetAsync($"/api/match/{Id}");
+        var response = await Http.GetAsync($"/api/match/{Id}");
         Console.WriteLine("funkar!");
         
         //TODO - plocka ut info från response och sätt till variabler i html

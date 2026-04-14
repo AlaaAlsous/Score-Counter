@@ -37,7 +37,7 @@ app.MapPost("/api/match", (MatchRequestDto request, MatchStore store) =>
         return Results.BadRequest("GameName är required.");
     var match = store.CreateMatch(request);
 
-    var url = $"/api/match/{match.Id}";
+    var url = $"/match/{match.Id}";
 
     return Results.Created(url, new MatchResponseDto
     {
