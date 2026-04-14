@@ -28,4 +28,46 @@ else
         Startpoäng: @match.StartScore<br />
         Spelare låsta: @(match.PlayersLocked ? "Ja" : "Nej")<br />
         Skapad: @match.CreatedAt.ToString("g")<br />
+    </p>
+
+    <h4>Spelare</h4>
+
+    @if (match.Players.Count == 0)
+    {
+        <p>Inga spelare än.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Namn</th>
+                    <th>Poäng</th>
+                    <th>Senaste uppdatering</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in SortedPlayers)
+                {
+                    <tr>
+                        <td>
+                            <input value="@player.Name" @onchange="(e => UpdatePlayerName(player, e.Value?.ToString() ?? ""))" />
+                        </td>
+                        <td>
+                            <input type="number" value="@player.Score" @onchange="(e => UpdatePlayerScore(player, e.Value?.ToString() ?? "0"))" />
+                        </td>
+                        <td>
+                            <button @onclick="() => ChangeScore(player, -1)">-1</button>
+                            <button @onclick="() => ChangeScore(player, 1)">+1</button>
+
+                            @if (!match.PlayersLocked)
+                            {
+                                <button @onclick="() => RemovePlayer(player)">Ta bort</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 }
