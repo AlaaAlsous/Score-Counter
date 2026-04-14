@@ -12,10 +12,10 @@
     
     <label>Startpoäng för spelare</label>
     <input class="starting-points" 
-           @bind="_startingPoints" />
+           @bind="_startScore" />
     
     <label>Vad är målet för spelet?</label>
-    <select class="order-by-points" @bind="_orderByPoints">
+    <select class="order-by-points" @bind="_highScoreWins">
         <option value="max">Få så många poäng som möjligt</option>
         <option value="min">Få så några poäng som möjligt</option>
     </select>
@@ -53,8 +53,8 @@
 @code {
 
     string _gameName = "";
-    int _startingPoints;
-    string _orderByPoints = "max"; //sätter default till "max"
+    int _startScore;
+    string _highScoreWins = "max"; //sätter default till "max"
     string _player = "";
     readonly List<string> _playerNames = [];
     int _maxPlayers = 4;
