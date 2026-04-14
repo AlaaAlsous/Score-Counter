@@ -44,7 +44,7 @@ else
                 <tr>
                     <th>Namn</th>
                     <th>Poäng</th>
-                    <th>Senaste uppdatering</th>
+                    <th>Åtgärder</th>
                 </tr>
             </thead>
             <tbody>
@@ -52,10 +52,10 @@ else
                 {
                     <tr>
                         <td>
-                            <input value="@player.Name" @onchange="(e => UpdatePlayerName(player, e.Value?.ToString() ?? ""))" />
+                            <input value="@player.Name" @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
                         </td>
                         <td>
-                            <input type="number" value="@player.Score" @onchange="(e => UpdatePlayerScore(player, e.Value?.ToString() ?? "0"))" />
+                            <input type="number" value="@player.Score" @onchange="e => UpdatePlayerScore(player, e.Value?.ToString() ?? 0.ToString())" />
                         </td>
                         <td>
                             <button @onclick="() => ChangeScore(player, -1)">-1</button>
@@ -83,7 +83,7 @@ else
 
     <button @onclick="ResetMatch">Återställ match</button>
     <button @onclick="CloneMatch">Klona match</button>
-    // <button @onclick="DeleteMatch">Ta bort match</button> Implement later
+    @* <button @onclick="DeleteMatch">Ta bort match</button> Implement later *@
 
     @if (!string.IsNullOrWhiteSpace(statusMessage))
     {
