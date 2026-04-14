@@ -1,20 +1,31 @@
 @page "/match/{id}"
+@using System.Net.Http.Json
+@using Backend.Models
 @inject HttpClient Http
+@inject NavigationManager Nav
 
-<h2>Match!</h2>
+<h2>Matchinformation</h2>
 
-@*
-TODO: lägga in fält/tabell som visar info från match från backend*@
+@if (isLoading)
+{
+    <p>Laddar matchinformation...</p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
+else if (match is null)
+{
+    <p>Matchen hittades inte.</p>
+}
+else
+{
+    <h3>@match.GameName</h3>>
 
-@code {
-    [Parameter] public string Id { get; set; } = string.Empty;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var response = await Http.GetAsync($"/api/match/{Id}");
-        Console.WriteLine("funkar!");
-        
-        //TODO - plocka ut info från response och sätt till variabler i html
-
-    }
+    <p>
+        Match-ID: @match.Id<br />
+        Regler: @(match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")<br />
+        Startpoäng: @match.StartScore<br />
+        Spelare låsta: @(match.PlayersLocked ? "Ja" : "Nej")<br />
+        Skapad: @match.CreatedAt.ToString("g")<br />
 }
