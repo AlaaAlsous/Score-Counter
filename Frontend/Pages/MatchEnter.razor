@@ -28,9 +28,15 @@
         string? id = null;
         if (trimmed.StartsWith("/match/"))
             id = trimmed[7..];
+        else if (trimmed.StartsWith("http://") || trimmed.StartsWith("https://"))
+        {
+            var uri = new Uri(trimmed);
+            if (uri.AbsolutePath.StartsWith("/match/"))
+                id = uri.AbsolutePath[7..];
+        }
         else if (trimmed.StartsWith("match/"))
             id = trimmed[6..];
-        else if (trimmed.All(char.IsDigit))
+        else if (trimmed.All(c => char.IsLetterOrDigit(c)))
             id = trimmed;
         else
             id = null;
