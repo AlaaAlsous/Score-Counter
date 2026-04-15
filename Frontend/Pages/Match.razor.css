@@ -155,3 +155,39 @@
   border-color: #2563eb;
   outline: none;
 }
+
+.match-form ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.match-form li {
+  background: #e0e7ff;
+  color: #1e293b;
+  padding: 0.5rem 1rem;
+  border-radius: 0.4rem;
+  font-size: 1rem;
+  box-shadow: 0 1px 4px #0001;
+  transition: background 0.2s;
+}
+.match-form li:hover {
+  background: #c7d2fe;
+}
+
+.table button.remove-player-btn {
+  margin-left: 1.2rem;
+}
+
+.match-error {
+  color: #dc2626;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
