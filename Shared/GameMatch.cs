@@ -9,5 +9,6 @@ public class GameMatch
     public int MaxPlayers { get; set; } = 0;
     public int StartScore { get; set; } = 0;
     public List<GamePlayer> Players { get; set; } = new();
+    public List<string> OriginalPlayerNames { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
