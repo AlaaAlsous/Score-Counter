@@ -93,6 +93,7 @@ else
     <hr />
 
     <div class="match-action-row">
+        <button type="button" @onclick="ShowResults" class="match-action-btn">Avsluta match</button>
         <button type="button" @onclick="ResetMatch" class="match-action-btn">Återställ match</button>
         <button type="button" @onclick="CloneMatch" class="match-action-btn">Klona match</button>
         @* <button type="button" @onclick="DeleteMatch">Ta bort match</button> *@
@@ -111,6 +112,64 @@ else
     </div>
 }
 </div>
+
+@if (_showResultsPopup && _match is not null)
+{
+    <div class="popup-backdrop">
+        <div class="popup-box results-popup">
+            <h3>Slutresultat</h3>
+
+            <p>
+                <strong>Match:</strong> @_match.GameName
+            </p>
+
+            @if (SortedPlayers.Any())
+            {
+                var winner = SortedPlayers.First();
+
+                <div class="winner-box">
+                    <h4>Vinnare</h4>
+                    <p class="winner-name">@winner.Name</p>
+                    <p>@winner.Score poäng</p>
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Placering</th>
+                            <th>Namn</th>
+                            <th>Poäng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var placement = 1;
+                        }
+                        @foreach (var player in SortedPlayers)
+                        {
+                            <tr>
+                                <td>@placement</td>
+                                <td>@player.Name</td>
+                                <td>@player.Score</td>
+                            </tr>
+                            placement++;
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>Det finns inga spelare att visa.</p>
+            }
+
+            <div class="match-action-row">
+                <button type="button" class="match-action-btn" @onclick="CloseResults">Stäng</button>
+                <button type="button" class="match-action-btn" @onclick="ResetMatch">Ny match från start</button>
+                <button type="button" class="match-action-btn" @onclick="CloneMatch">Klona match</button>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     [Parameter]
@@ -143,10 +202,13 @@ else
 
     private async Task LoadMatch()
     {
-        try
+    try
         {
             _isLoading = true;
             _statusMessage = string.Empty;
+            _showErrorPopup = false;
+            _errorMessage = string.Empty;
+            _showResultsPopup = false;
 
             _match = await Http.GetFromJsonAsync<GameMatch>($"/api/match/{Id}");
 
@@ -162,8 +224,8 @@ else
         finally
         {
             _isLoading = false;
-        }
     }
+}
 
     private void ShowError(string message)
     {
@@ -193,6 +255,18 @@ else
         StateHasChanged();
 
         _ = HideStatusMessage();
+    }
+
+    private bool _showResultsPopup;
+
+    private void ShowResults()
+    {
+        _showResultsPopup = true;
+    }
+
+    private void CloseResults()
+    {
+        _showResultsPopup = false;
     }
 
     private async Task UpdatePlayerName(GamePlayer player, string newName)
