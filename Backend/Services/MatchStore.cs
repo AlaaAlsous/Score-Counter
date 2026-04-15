@@ -11,25 +11,28 @@ public class MatchStore
     public GameMatch CreateMatch(MatchRequestDto request)
 {
     var playerNames = request.PlayerNames?
-        .Where(n => !string.IsNullOrWhiteSpace(n))
-        .Select(n => n.Trim())
-        .ToList() ?? new List<string>();
+    .Where(n => !string.IsNullOrWhiteSpace(n))
+    .Select(n => n.Trim())
+    .ToList() ?? new List<string>();
 
     var match = new GameMatch
     {
-        GameName = request.GameName,
-        HighScoreWins = request.HighScoreWins,
-        MaxPlayers = request.MaxPlayers,
-        PlayersLocked = request.PlayersLocked,
-        StartScore = request.StartScore,
-        OriginalPlayerNames = playerNames.ToList(),
-        Players = playerNames
-            .Select(n => new GamePlayer
-            {
-                Name = n,
-                Score = request.StartScore
-            })
-            .ToList()
+    GameName = request.GameName,
+    HighScoreWins = request.HighScoreWins,
+    MaxPlayers = request.MaxPlayers,
+    PlayersLocked = request.PlayersLocked,
+    StartScore = request.StartScore,
+
+    // 🔥 DETTA ÄR VIKTIGT
+    OriginalPlayerNames = playerNames.ToList(),
+
+    Players = playerNames
+        .Select(n => new GamePlayer
+        {
+            Name = n,
+            Score = request.StartScore
+        })
+        .ToList()
     };
 
     _matches[match.Id] = match;

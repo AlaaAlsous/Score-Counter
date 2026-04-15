@@ -130,7 +130,7 @@ else
                 ? _match.Players.OrderByDescending(p => p.Score)
                 : _match.Players.OrderBy(p => p.Score).ToList();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         await LoadMatch();
     }
