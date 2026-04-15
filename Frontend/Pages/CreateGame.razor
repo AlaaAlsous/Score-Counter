@@ -56,6 +56,17 @@
 
 <button class="create-game-button" @onclick="CreateNewGame">Skapa match</button>
 
+@if (_showErrorPopup)
+{
+    <div class="popup-backdrop">
+        <div class="popup-box">
+            <h4>Fel</h4>
+            <p>@_errorMessage</p>
+            <button type="button" @onclick="CloseErrorPopup">OK</button>
+        </div>
+    </div>
+}
+
 @code {
 
     string _gameName = "";
@@ -65,22 +76,52 @@
     readonly List<string> _playerNames = [];
     int _maxPlayers = 4;
     bool _playersLocked;
+    private bool _showErrorPopup = false;
+    private string _errorMessage = string.Empty;
     
     void AddPlayer()
     {
         if (_playerNames.Count >= _maxPlayers)
-        {
+        { 
             return;
         }
-        if (!string.IsNullOrWhiteSpace(_player))
+
+        if (_playerNames.Contains(_player))
         {
-            _playerNames.Add(_player);
-            _player = "";
+            ShowError("Spelaren finns redan. Ange annat spelarnamn.");
+            return;
         }
+
+        if (string.IsNullOrWhiteSpace((_player)))
+        {
+            ShowError("Ange ett spelarnamn");
+            return;
+        }
+        
+        _playerNames.Add(_player);
+        _player = "";
     }
 
+    private void ShowError(string message)
+    {
+        _errorMessage = message;
+        _showErrorPopup = true;
+    }
+    
+    private void CloseErrorPopup()
+    {
+        _showErrorPopup = false;
+        _errorMessage = string.Empty;
+    }
+    
     async Task CreateNewGame()
     {
+        if (string.IsNullOrWhiteSpace(_gameName))
+        {
+            ShowError("Ange namn för ditt spel");
+            return;
+        }
+        
         var game = new MatchRequestDto
         {
             GameName = _gameName,
