@@ -13,5 +13,14 @@
 </div>
 
 @code {
+    private string matchInput = string.Empty;
+    private string matchError = string.Empty;
 
+    private void HandleMatchInputKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            GoToMatch();
+        }
+    }
 }
