@@ -1,0 +1,17 @@
+@page "/match-enter"
+@inject NavigationManager NavManager
+
+<div class="match-enter-container">
+    <h3>Gå till match</h3>
+    <label for="matchInput">Ange match-id eller länk:</label>
+    <input id="matchInput" @bind="matchInput" @onkeydown="HandleMatchInputKey" autofocus />
+    <button @onclick="GoToMatch">Gå till match</button>
+    @if (!string.IsNullOrEmpty(matchError))
+    {
+        <div class="match-dialog-error">@matchError</div>
+    }
+</div>
+
+@code {
+
+}
