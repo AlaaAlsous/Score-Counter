@@ -58,7 +58,9 @@ else
                         </td>
                         <td>
                             <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
+                            <button type="button" @onclick="() => ChangeScore(player, -5)">-5</button>
                             <button type="button" @onclick="() => ChangeScore(player, 1)">+1</button>
+                            <button type="button" @onclick="() => ChangeScore(player, 5)">+5</button>
 
                             @if (!match.PlayersLocked)
                             {
