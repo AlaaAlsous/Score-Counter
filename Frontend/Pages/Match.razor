@@ -190,6 +190,9 @@ else
 
         player.Score += delta;
         _statusMessage = "Poängen uppdaterades.";
+        StateHasChanged();
+
+        _ = HideStatusMessage();
     }
 
     private async Task UpdatePlayerName(GamePlayer player, string newName)
@@ -294,6 +297,13 @@ else
         {
             await AddPlayer();
         }
+    }
+
+    private async Task HideStatusMessage()
+    {
+        await Task.Delay(2000);
+        _statusMessage = string.Empty;
+        await InvokeAsync(StateHasChanged);
     }
 
     private class CloneResponse
