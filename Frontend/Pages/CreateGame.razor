@@ -9,7 +9,7 @@
 <h1 class="create-game-title">Mitt spel</h1>
 
 <div class="create-game-container">
-    <form class="create-game-form" onsubmit="return false">
+    <div class="create-game-form">
         <label for="gameName">Namn på spel</label>
         <input id="gameName" @bind="_gameName" placeholder="Skriv in namnet på din sport/ditt spel här" />
 
@@ -47,7 +47,7 @@
         </label>
 
         <button type="submit" @onclick="CreateNewGame">Skapa match</button>
-    </form>
+    </div>
 </div>
 
 
