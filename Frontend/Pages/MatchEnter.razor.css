@@ -24,3 +24,47 @@
   margin-bottom: 0.5rem;
   align-self: flex-start;
 }
+
+.match-enter-container input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-size: 1.1rem;
+  border: 1px solid #bfc9d1;
+  border-radius: 8px;
+  margin-bottom: 1.2rem;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.match-enter-container input:focus {
+  border: 1.5px solid #5b9bd5;
+}
+
+.match-enter-container button {
+  width: 100%;
+  padding: 0.7rem 0;
+  font-size: 1.1rem;
+  background: linear-gradient(90deg, #5b9bd5 0%, #6dd5ed 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.07);
+  transition: background 0.2s;
+}
+
+.match-enter-container button:hover {
+  background: linear-gradient(90deg, #4a8bc2 0%, #53b2d6 100%);
+}
+
+.match-dialog-error {
+  color: #c0392b;
+  background: #ffeaea;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  text-align: center;
+}
