@@ -46,7 +46,7 @@ else
             <tbody>
                 @foreach (var player in SortedPlayers)
                 {
-                    <tr>
+                    <tr @key="player.Id">
                         <td>
                             <input value="@player.Name"
                                    @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
