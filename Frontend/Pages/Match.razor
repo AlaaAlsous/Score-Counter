@@ -87,7 +87,7 @@ else
     @if (!match.PlayersLocked)
     {
         <h4>Lägg till spelare</h4>
-        <input @bind="newPlayerName" placeholder="Spelarnamn" />
+        <input @bind="newPlayerName" @onkeyup="HandleKey" placeholder="Spelarnamn" />
         <button type="button" @onclick="AddPlayer">Lägg till</button>
     }
 
@@ -320,6 +320,14 @@ else
         else
         {
             ShowError(await response.Content.ReadAsStringAsync());
+        }
+    }
+
+    async Task HandleKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await AddPlayer();
         }
     }
 
