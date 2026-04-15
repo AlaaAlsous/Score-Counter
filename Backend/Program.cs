@@ -49,19 +49,30 @@ app.MapPost("/api/match", (MatchRequestDto request, MatchStore store) =>
 app.MapPost("/api/match/{id}/reset", (string id, MatchStore store) =>
 {
     if (string.IsNullOrWhiteSpace(id))
-        return Results.BadRequest("Matchen ID är required.");
+        return Results.BadRequest("Matchens ID krävs.");
+
     if (store.TryGetMatch(id, out var match))
     {
-        lock (match!)
+        var resetRequest = new MatchRequestDto
         {
-            foreach (var player in match.Players)
-            {
-                player.Score = match.StartScore;
-            }
-        }
-        store.UpdateMatch(id, match);
-        return Results.Ok(match);
+            GameName = match!.GameName,
+            HighScoreWins = match.HighScoreWins,
+            MaxPlayers = match.MaxPlayers,
+            PlayersLocked = match.PlayersLocked,
+            StartScore = match.StartScore,
+            PlayerNames = match.OriginalPlayerNames.ToList()
+        };
+
+        var newMatch = store.CreateMatch(resetRequest);
+        var url = $"/match/{newMatch.Id}";
+
+        return Results.Created(url, new MatchResponseDto
+        {
+            Id = newMatch.Id,
+            Url = url
+        });
     }
+
     return Results.NotFound("Matchen hittades inte.");
 });
 

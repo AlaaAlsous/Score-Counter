@@ -255,18 +255,26 @@ else
 
     private async Task ResetMatch()
     {
-        var response = await Http.PostAsync($"/api/match/{Id}/reset", null);
+    var response = await Http.PostAsync($"/api/match/{Id}/reset", null);
 
-        if (response.IsSuccessStatusCode)
+    if (response.IsSuccessStatusCode)
+    {
+        var result = await response.Content.ReadFromJsonAsync<CloneResponse>();
+
+        if (result is not null && !string.IsNullOrWhiteSpace(result.Url))
         {
-            _statusMessage = "Matchen startades om.";
-            await LoadMatch();
+            Nav.NavigateTo(result.Url);
         }
         else
         {
-            ShowError(await response.Content.ReadAsStringAsync());
+            ShowError("Kunde inte skapa en återställd match.");
         }
     }
+    else
+    {
+        ShowError(await response.Content.ReadAsStringAsync());
+    }
+}
 
     private async Task CloneMatch()
     {
