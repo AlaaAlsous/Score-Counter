@@ -90,3 +90,68 @@
   border-color: #2563eb;
   outline: none;
 }
+
+.match-form button,
+.table button {
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  color: #ffffff;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.98rem;
+  margin: 0 0.1rem 0.2rem 0;
+  box-shadow: 0 1px 4px #0001;
+  transition:
+    background 0.2s,
+    transform 0.1s;
+  min-width: 2.2rem;
+}
+
+.match-form button:hover,
+.table button:hover {
+  background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%);
+  transform: translateY(-1px) scale(1.04);
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  box-shadow: 0 1px 8px #0001;
+  margin-bottom: 1.5rem;
+}
+.table th,
+.table td {
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+}
+.table th {
+  background: #e0e7ff;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 2px solid #c7d2fe;
+}
+.table tr:nth-child(even) td {
+  background: #f8fafc;
+}
+.table tr:last-child td {
+  border-bottom: none;
+}
+.table input[type="number"],
+.table input[type="text"],
+.table input {
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.3rem;
+  border: 1px solid #d1d5db;
+  font-size: 1rem;
+}
+.table input:focus {
+  border-color: #2563eb;
+  outline: none;
+}
