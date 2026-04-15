@@ -36,3 +36,57 @@
 .match-info-id {
   color: #2563eb;
 }
+
+.match-action-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.2rem;
+  justify-content: center;
+}
+.match-action-btn {
+  width: auto;
+  min-width: unset;
+  max-width: 200px;
+}
+.match-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2.5rem 2rem;
+  background: #f1f5f9;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 24px #0000001a;
+  max-width: 900px;
+  margin: 2.5rem auto;
+}
+
+.match-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 1rem;
+}
+
+.match-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  width: 100%;
+}
+
+.match-form input,
+.match-form select {
+  padding: 0.7rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border 0.2s;
+}
+
+.match-form input:focus,
+.match-form select:focus {
+  border-color: #2563eb;
+  outline: none;
+}
