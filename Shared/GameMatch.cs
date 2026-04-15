@@ -2,7 +2,7 @@ namespace Shared;
 
 public class GameMatch
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString("N")[..12];
+    public string Id { get; set; } = string.Empty;
     public string GameName { get; set; } = string.Empty;
     public bool HighScoreWins { get; set; } = true;
     public bool PlayersLocked { get; set; } = false;
