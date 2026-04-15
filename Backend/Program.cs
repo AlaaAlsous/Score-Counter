@@ -119,7 +119,7 @@ app.MapPost("/api/match/{id}/clone", (string id, MatchStore store) =>
     return Results.NotFound("Matchen hittades inte.");
 });
 
-app.MapPut("/api/match/{id}/player/{playerId}/score", (string id, string playerId, int newScore, MatchStore store) =>
+app.MapPut("/api/match/{id}/player/{playerId}/score", (string id, string playerId, int? newScore, int? amount, string? operation, MatchStore store) =>
 {
     if (string.IsNullOrWhiteSpace(id))
         return Results.BadRequest("Matchen ID är required.");
@@ -134,7 +134,19 @@ app.MapPut("/api/match/{id}/player/{playerId}/score", (string id, string playerI
             if (player == null)
                 return Results.NotFound("Spelaren hittades inte i matchen.");
 
-            player.Score = newScore;
+            if (newScore is { } score)
+            {
+                player.Score = score;
+            }
+            else if (amount.HasValue && !string.IsNullOrWhiteSpace(operation))
+            {
+                var delta = operation == "decrease" ? -amount.Value : amount.Value;
+                player.Score += delta;
+            }
+            else
+            {
+                return Results.BadRequest("Antingen newScore eller amount+operation krävs.");
+            }
             store.UpdateMatch(id, match);
             return Results.Ok(player);
         }
