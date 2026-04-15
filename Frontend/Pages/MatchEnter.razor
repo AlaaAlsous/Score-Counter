@@ -16,6 +16,35 @@
     private string matchInput = string.Empty;
     private string matchError = string.Empty;
 
+    private void GoToMatch()
+    {
+        var trimmed = matchInput.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            matchError = "Du måste ange ett match-id eller länk.";
+            return;
+        }
+
+        string? id = null;
+        if (trimmed.StartsWith("/match/"))
+            id = trimmed[7..];
+        else if (trimmed.StartsWith("match/"))
+            id = trimmed[6..];
+        else if (trimmed.All(char.IsDigit))
+            id = trimmed;
+        else
+            id = null;
+
+        if (!string.IsNullOrEmpty(id) && id.All(char.IsLetterOrDigit))
+        {
+            NavManager.NavigateTo($"/match/{id}");
+        }
+        else
+        {
+            matchError = "Ogiltigt match-id eller länk.";
+        }
+    }
+
     private void HandleMatchInputKey(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
