@@ -9,22 +9,32 @@ public class MatchStore
     private readonly ConcurrentDictionary<string, GameMatch> _matches = new();
 
     public GameMatch CreateMatch(MatchRequestDto request)
-    {
-        var match = new GameMatch
-        {
-            GameName = request.GameName,
-            HighScoreWins = request.HighScoreWins,
-            MaxPlayers = request.MaxPlayers,
-            PlayersLocked = request.PlayersLocked,
-            StartScore = request.StartScore,
-            Players = request.PlayerNames?.Where(n => !string.IsNullOrWhiteSpace(n))
-                                        .Select(n => new GamePlayer { Name = n.Trim(), Score = request.StartScore })
-                                        .ToList() ?? new List<GamePlayer>()
-        };
+{
+    var playerNames = request.PlayerNames?
+        .Where(n => !string.IsNullOrWhiteSpace(n))
+        .Select(n => n.Trim())
+        .ToList() ?? new List<string>();
 
-        _matches[match.Id] = match;
-        return match;
-    }
+    var match = new GameMatch
+    {
+        GameName = request.GameName,
+        HighScoreWins = request.HighScoreWins,
+        MaxPlayers = request.MaxPlayers,
+        PlayersLocked = request.PlayersLocked,
+        StartScore = request.StartScore,
+        OriginalPlayerNames = playerNames.ToList(),
+        Players = playerNames
+            .Select(n => new GamePlayer
+            {
+                Name = n,
+                Score = request.StartScore
+            })
+            .ToList()
+    };
+
+    _matches[match.Id] = match;
+    return match;
+}
 
     public bool TryGetMatch(string id, out GameMatch? match)
     {
