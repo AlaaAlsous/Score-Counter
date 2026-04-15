@@ -7,7 +7,7 @@
   background: #f1f5f9;
   border-radius: 1rem;
   box-shadow: 0 2px 16px #00000014;
-  max-width: 500px;
+  max-width: 400px;
   margin: 2rem auto;
 }
 
@@ -38,4 +38,55 @@
 .create-game-form select:focus {
   border-color: #2563eb;
   outline: none;
+}
+
+.create-game-form button {
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.8rem 1.2rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition:
+    background 0.2s,
+    transform 0.1s;
+}
+
+.create-game-form button:hover {
+  background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.create-game-form ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.create-game-form li {
+  background: #e0e7ff;
+  color: #1e293b;
+  padding: 0.5rem 1rem;
+  border-radius: 0.4rem;
+  font-size: 1rem;
+  box-shadow: 0 1px 4px #0001;
+  transition: background 0.2s;
+}
+.create-game-form li:hover {
+  background: #c7d2fe;
+}
+
+.create-game-error {
+  color: #dc2626;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
 }
