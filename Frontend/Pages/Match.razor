@@ -53,8 +53,8 @@ else
                         </td>
                         <td>
                             <input type="number"
-                                   value="@player.Score"
-                                   @onchange="e => UpdatePlayerScore(player, e.Value?.ToString() ?? 0.ToString())" />
+                                   @bind="player.Score"
+                                   @bind:after="async () => await UpdatePlayerScore(player, player.Score.ToString())" />
                         </td>
                         <td>
                             <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
@@ -164,12 +164,34 @@ else
 
     private async Task ChangeScore(GamePlayer player, int delta)
     {
-        var newScore = player.Score + delta;
-        await SetPlayerScore(player, newScore);
+        var operation = delta < 0 ? "decrease" : "increase";
+        var amount = Math.Abs(delta);
+        
+        var response = await Http.PutAsync(
+            $"/api/match/{Id}/player/{player.Id}/score?amount={amount}&operation={operation}", null);
+        
+        /*var newScore = player.Score + delta;
+        await SetPlayerScore(player, newScore);*/
+
+        if (!response.IsSuccessStatusCode)
+        {
+            ShowError("Poängen gick inte att ändra");
+            return;
+        }
+
+        player.Score += delta;
     }
 
     private async Task UpdatePlayerScore(GamePlayer player, string value)
     {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            ShowError("Ogiltigt poängvärde");
+            return;
+        }
+
+        value = value.Replace('-', '-'); //extra säkring för MacOS/andra OS
+        
         if (int.TryParse(value, out var newScore))
         {
             await SetPlayerScore(player, newScore);
