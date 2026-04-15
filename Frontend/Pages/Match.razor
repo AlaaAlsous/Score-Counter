@@ -3,6 +3,7 @@
 @using Shared
 @inject HttpClient Http
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>Match</PageTitle>
 <div class="match-container">
@@ -22,7 +23,11 @@ else
 
         <div class="match-info-box">
             <div class="match-info-row">
-                <div class="match-info-item"><strong>Match-ID:</strong> <span class="match-info-value match-info-id">@_match.Id</span></div>
+                    <div class="match-info-item">
+                        <strong>Match-ID:</strong>
+                        <span class="match-info-value match-info-id">@_match.Id</span>
+                        <button type="button" class="copy-link-btn" @onclick="CopyMatchLink">Kopiera länk</button>
+                    </div>
                 <div class="match-info-item"><strong>Regler:</strong> <span class="match-info-value">@(_match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")</span></div>
             </div>
             <div class="match-info-row">
@@ -392,5 +397,28 @@ else
     {
         public string Id { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
+    }
+
+    private async Task CopyMatchLink()
+    {
+        try
+        {
+            var absoluteUrl = Nav.ToAbsoluteUri($"/match/{Id}").ToString();
+            var success = await JS.InvokeAsync<bool>("copyToClipboard", absoluteUrl);
+
+            if (success)
+            {
+                _statusMessage = "Länken kopierades.";
+                _ = HideStatusMessage();
+            }
+            else
+            {
+                ShowError("Kunde inte kopiera länken.");
+            }
+        }
+        catch
+        {
+            ShowError("Kunde inte kopiera länken.");
+        }
     }
 }

@@ -191,3 +191,13 @@
   margin-bottom: 1rem;
   font-size: 1rem;
 }
+
+.copy-link-btn {
+    background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%);
+    color: #ffffff;
+    margin-left: 0.6rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}

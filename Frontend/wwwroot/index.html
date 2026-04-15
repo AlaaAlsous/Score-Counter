@@ -29,6 +29,32 @@
         <span class="dismiss">🗙</span>
     </div>
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+    <script>
+    window.copyToClipboard = async function (text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            const successful = document.execCommand("copy");
+            document.body.removeChild(textArea);
+            return successful;
+        } catch {
+            document.body.removeChild(textArea);
+            return false;
+        }
+    };
+</script>
 </body>
 
 </html>
