@@ -1,6 +1,6 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Frontend</a>
+        <a class="navbar-brand" href="">Poängräknare</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -10,9 +10,24 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="nav flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Ny Match
-            </NavLink>
+                <NavLink class="nav-link" href="/">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Startsida
+                </NavLink>
+        </div>
+        <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/create-game">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Skapa match
+                </NavLink>
+        </div>
+        <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/match/{id}">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Match
+                </NavLink>
+        </div>
+              <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/result">
+                    <span class="bi bi-bar-chart-fill-nav-menu" aria-hidden="true"></span> Resultat
+                </NavLink>
         </div>
     </nav>
 </div>
