@@ -5,7 +5,9 @@
 @inject HttpClient Http
 @inject NavigationManager Nav
 
-<h2>Matchinformation</h2>
+<PageTitle>Match</PageTitle>
+<div class="match-container">
+    <span class="match-info-label">Matchinformation</span>
 
 @if (isLoading)
 {
@@ -17,17 +19,26 @@ else if (match is null)
 }
 else
 {
-    <h3>@match.GameName</h3>
+    <h3 class="match-title">@match.GameName</h3>
 
-    <p>
-        Match-ID: @match.Id<br />
-        Regler: @(match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")<br />
-        Startpoäng: @match.StartScore<br />
-        Spelare låsta: @(match.PlayersLocked ? "Ja" : "Nej")<br />
-        Skapad: @match.CreatedAt.ToString("g")<br />
-    </p>
+        <div class="match-info-box">
+            <div class="match-info-row">
+                <div class="match-info-item"><strong>Match-ID:</strong> <span class="match-info-value match-info-id">@match.Id</span></div>
+                <div class="match-info-item"><strong>Regler:</strong> <span class="match-info-value">@(match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")</span></div>
+            </div>
+            <div class="match-info-row">
+                <div class="match-info-item"><strong>Startpoäng:</strong> <span class="match-info-value">@match.StartScore</span></div>
+                <div class="match-info-item"><strong>Spelare låsta:</strong> <span class="match-info-value">@(match.PlayersLocked ? "Ja" : "Nej")</span></div>
+                <div class="match-info-item"><strong>Skapad:</strong> <span class="match-info-value">@match.CreatedAt.ToString("g")</span></div>
+            </div>
+        </div>
+    <form class="match-form" onsubmit="return false">
 
     <h4>Spelare</h4>
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <p style="color: green; margin-bottom: 0.7rem;">@statusMessage</p>
+    }
 
     @if (match.Players.Count == 0)
     {
@@ -64,7 +75,7 @@ else
 
                             @if (!match.PlayersLocked)
                             {
-                                <button type="button" @onclick="() => RemovePlayer(player)">Ta bort</button>
+                                <button type="button" class="remove-player-btn" @onclick="() => RemovePlayer(player)">Ta bort</button>
                             }
                         </td>
                     </tr>
@@ -82,14 +93,12 @@ else
 
     <hr />
 
-    <button type="button" @onclick="ResetMatch">Återställ match</button>
-    <button type="button" @onclick="CloneMatch">Klona match</button>
-    @* <button type="button" @onclick="DeleteMatch">Ta bort match</button> *@
-
-    @if (!string.IsNullOrWhiteSpace(statusMessage))
-    {
-        <p style="color: green;">@statusMessage</p>
-    }
+    <div class="match-action-row">
+        <button type="button" @onclick="ResetMatch" class="match-action-btn">Återställ match</button>
+        <button type="button" @onclick="CloneMatch" class="match-action-btn">Klona match</button>
+        @* <button type="button" @onclick="DeleteMatch">Ta bort match</button> *@
+    </div>
+    </form>
 }
 
 @if (showErrorPopup)
@@ -102,6 +111,7 @@ else
         </div>
     </div>
 }
+</div>
 
 @code {
     [Parameter]
