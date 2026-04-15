@@ -1,5 +1,4 @@
 @page "/match/{id}"
-@using System.Net.Http.Json
 @using System.Linq
 @using Shared
 @inject HttpClient Http
@@ -9,38 +8,38 @@
 <div class="match-container">
     <span class="match-info-label">Matchinformation</span>
 
-@if (isLoading)
+@if (_isLoading)
 {
     <p>Laddar matchinformation...</p>
 }
-else if (match is null)
+else if (_match is null)
 {
     <p>Matchen hittades inte.</p>
 }
 else
 {
-    <h3 class="match-title">@match.GameName</h3>
+    <h3 class="match-title">@_match.GameName</h3>
 
         <div class="match-info-box">
             <div class="match-info-row">
-                <div class="match-info-item"><strong>Match-ID:</strong> <span class="match-info-value match-info-id">@match.Id</span></div>
-                <div class="match-info-item"><strong>Regler:</strong> <span class="match-info-value">@(match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")</span></div>
+                <div class="match-info-item"><strong>Match-ID:</strong> <span class="match-info-value match-info-id">@_match.Id</span></div>
+                <div class="match-info-item"><strong>Regler:</strong> <span class="match-info-value">@(_match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")</span></div>
             </div>
             <div class="match-info-row">
-                <div class="match-info-item"><strong>Startpoäng:</strong> <span class="match-info-value">@match.StartScore</span></div>
-                <div class="match-info-item"><strong>Spelare låsta:</strong> <span class="match-info-value">@(match.PlayersLocked ? "Ja" : "Nej")</span></div>
-                <div class="match-info-item"><strong>Skapad:</strong> <span class="match-info-value">@match.CreatedAt.ToString("g")</span></div>
+                <div class="match-info-item"><strong>Startpoäng:</strong> <span class="match-info-value">@_match.StartScore</span></div>
+                <div class="match-info-item"><strong>Spelare låsta:</strong> <span class="match-info-value">@(_match.PlayersLocked ? "Ja" : "Nej")</span></div>
+                <div class="match-info-item"><strong>Skapad:</strong> <span class="match-info-value">@_match.CreatedAt.ToString("g")</span></div>
             </div>
         </div>
     <form class="match-form" onsubmit="return false">
 
     <h4>Spelare</h4>
-    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    @if (!string.IsNullOrWhiteSpace(_statusMessage))
     {
-        <p style="color: green; margin-bottom: 0.7rem;">@statusMessage</p>
+        <p style="color: green; margin-bottom: 0.7rem;">@_statusMessage</p>
     }
 
-    @if (match.Players.Count == 0)
+    @if (_match.Players.Count == 0)
     {
         <p>Inga spelare än.</p>
     }
@@ -63,9 +62,9 @@ else
                                    @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
                         </td>
                         <td>
-                            <input type="number"
-                                   @bind="player.Score"
-                                   @bind:after="async () => await UpdatePlayerScore(player, player.Score.ToString())" />
+                            <input type="text"
+                                   value="@player.Score"
+                                   readonly />
                         </td>
                         <td>
                             <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
@@ -73,7 +72,7 @@ else
                             <button type="button" @onclick="() => ChangeScore(player, 1)">+1</button>
                             <button type="button" @onclick="() => ChangeScore(player, 5)">+5</button>
 
-                            @if (!match.PlayersLocked)
+                            @if (!_match.PlayersLocked)
                             {
                                 <button type="button" class="remove-player-btn" @onclick="() => RemovePlayer(player)">Ta bort</button>
                             }
@@ -84,10 +83,10 @@ else
         </table>
     }
 
-    @if (!match.PlayersLocked)
+    @if (!_match.PlayersLocked)
     {
         <h4>Lägg till spelare</h4>
-        <input @bind="newPlayerName" @onkeyup="HandleKey" placeholder="Spelarnamn" />
+        <input @bind="_newPlayerName" @onkeyup="HandleKey" placeholder="Spelarnamn" />
         <button type="button" @onclick="AddPlayer">Lägg till</button>
     }
 
@@ -101,12 +100,12 @@ else
     </form>
 }
 
-@if (showErrorPopup)
+@if (_showErrorPopup)
 {
     <div class="popup-backdrop">
         <div class="popup-box">
             <h4>Fel</h4>
-            <p>@errorMessage</p>
+            <p>@_errorMessage</p>
             <button type="button" @onclick="CloseErrorPopup">OK</button>
         </div>
     </div>
@@ -117,19 +116,19 @@ else
     [Parameter]
     public string Id { get; set; } = string.Empty;
 
-    private GameMatch? match;
-    private bool isLoading = true;
-    private bool showErrorPopup = false;
-    private string errorMessage = string.Empty;
-    private string newPlayerName = string.Empty;
-    private string statusMessage = string.Empty;
+    private GameMatch? _match;
+    private bool _isLoading = true;
+    private bool _showErrorPopup;
+    private string _errorMessage = string.Empty;
+    private string _newPlayerName = string.Empty;
+    private string _statusMessage = string.Empty;
 
     private IEnumerable<GamePlayer> SortedPlayers =>
-        match is null
+        _match is null
             ? Enumerable.Empty<GamePlayer>()
-            : match.HighScoreWins
-                ? match.Players.OrderByDescending(p => p.Score)
-                : match.Players.OrderBy(p => p.Score);
+            : _match.HighScoreWins
+                ? _match.Players.OrderByDescending(p => p.Score)
+                : _match.Players.OrderBy(p => p.Score).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -138,20 +137,20 @@ else
 
     private void CloseErrorPopup()
     {
-        showErrorPopup = false;
-        errorMessage = string.Empty;
+        _showErrorPopup = false;
+        _errorMessage = string.Empty;
     }
 
     private async Task LoadMatch()
     {
         try
         {
-            isLoading = true;
-            statusMessage = string.Empty;
+            _isLoading = true;
+            _statusMessage = string.Empty;
 
-            match = await Http.GetFromJsonAsync<GameMatch>($"/api/match/{Id}");
+            _match = await Http.GetFromJsonAsync<GameMatch>($"/api/match/{Id}");
 
-            if (match is null)
+            if (_match is null)
             {
                 ShowError("Matchen kunde inte laddas.");
             }
@@ -162,16 +161,19 @@ else
         }
         finally
         {
-            isLoading = false;
+            _isLoading = false;
         }
     }
 
     private void ShowError(string message)
     {
-        errorMessage = message;
-        showErrorPopup = true;
+        _errorMessage = message;
+        _showErrorPopup = true;
     }
 
+    //Det funkade inte att skicka negativ score i http-anropet för MacOS, så jag fick ändra och sätta en 
+    //till variabel för att meddela servern om det är en ökning eller minskning av poängen som ska ske så
+    //ändrade om metoderna och kapade ner till en metod för att underlätta - Astrid
     private async Task ChangeScore(GamePlayer player, int delta)
     {
         var operation = delta < 0 ? "decrease" : "increase";
@@ -179,9 +181,6 @@ else
         
         var response = await Http.PutAsync(
             $"/api/match/{Id}/player/{player.Id}/score?amount={amount}&operation={operation}", null);
-        
-        /*var newScore = player.Score + delta;
-        await SetPlayerScore(player, newScore);*/
 
         if (!response.IsSuccessStatusCode)
         {
@@ -190,41 +189,7 @@ else
         }
 
         player.Score += delta;
-    }
-
-    private async Task UpdatePlayerScore(GamePlayer player, string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            ShowError("Ogiltigt poängvärde");
-            return;
-        }
-
-        value = value.Replace('-', '-'); //extra säkring för MacOS/andra OS
-        
-        if (int.TryParse(value, out var newScore))
-        {
-            await SetPlayerScore(player, newScore);
-        }
-        else
-        {
-            ShowError("Ogiltigt poängvärde.");
-        }
-    }
-
-    private async Task SetPlayerScore(GamePlayer player, int newScore)
-    {
-        var response = await Http.PutAsync($"/api/match/{Id}/player/{player.Id}/score?newScore={newScore}", null);
-
-        if (response.IsSuccessStatusCode)
-        {
-            player.Score = newScore;
-            statusMessage = "Poängen uppdaterades.";
-        }
-        else
-        {
-            ShowError(await response.Content.ReadAsStringAsync());
-        }
+        _statusMessage = "Poängen uppdaterades.";
     }
 
     private async Task UpdatePlayerName(GamePlayer player, string newName)
@@ -240,7 +205,7 @@ else
         if (response.IsSuccessStatusCode)
         {
             player.Name = newName.Trim();
-            statusMessage = "Namnet uppdaterades.";
+            _statusMessage = "Namnet uppdaterades.";
         }
         else
         {
@@ -250,18 +215,18 @@ else
 
     private async Task AddPlayer()
     {
-        if (string.IsNullOrWhiteSpace(newPlayerName))
+        if (string.IsNullOrWhiteSpace(_newPlayerName))
         {
             ShowError("Ange ett spelarnamn.");
             return;
         }
 
-        var response = await Http.PostAsync($"/api/match/{Id}/player?playerName={Uri.EscapeDataString(newPlayerName)}", null);
+        var response = await Http.PostAsync($"/api/match/{Id}/player?playerName={Uri.EscapeDataString(_newPlayerName)}", null);
 
         if (response.IsSuccessStatusCode)
         {
-            newPlayerName = string.Empty;
-            statusMessage = "Spelaren lades till.";
+            _newPlayerName = string.Empty;
+            _statusMessage = "Spelaren lades till.";
             await LoadMatch();
         }
         else
@@ -276,7 +241,7 @@ else
 
         if (response.IsSuccessStatusCode)
         {
-            statusMessage = "Spelaren togs bort.";
+            _statusMessage = "Spelaren togs bort.";
             await LoadMatch();
         }
         else
@@ -291,7 +256,7 @@ else
 
         if (response.IsSuccessStatusCode)
         {
-            statusMessage = "Matchen startades om.";
+            _statusMessage = "Matchen startades om.";
             await LoadMatch();
         }
         else
