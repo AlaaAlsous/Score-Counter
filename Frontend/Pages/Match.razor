@@ -45,10 +45,10 @@ else
     <form class="match-form" onsubmit="return false">
         <h4>Spelare</h4>
 
-        @if (!string.IsNullOrWhiteSpace(_statusMessage))
-        {
-            <p style="color: green; margin-bottom: 0.7rem;">@_statusMessage</p>
-        }
+        <p style="margin-bottom: 0.7rem; min-height: 1.5em; color:@StatusMessageColor; visibility: visible;">
+            @(string.IsNullOrWhiteSpace(_statusMessage) ? "" : _statusMessage)
+        </p>
+
 
         @if (_match.Players.Count == 0)
         {
@@ -243,7 +243,6 @@ else
         try
         {
             _isLoading = true;
-            _statusMessage = string.Empty;
             _showErrorPopup = false;
             _errorMessage = string.Empty;
             _showResultsPopup = false;
@@ -287,7 +286,7 @@ else
         }
 
         player.Score += delta;
-        _statusMessage = "Poängen uppdaterades.";
+        _statusMessage = $@"{player.Name}: Poängen uppdaterades.";
         StateHasChanged();
 
         _ = HideStatusMessage();
@@ -342,7 +341,7 @@ else
         if (response.IsSuccessStatusCode)
         {
             player.Name = newName.Trim();
-            _statusMessage = "Namnet uppdaterades.";
+            _statusMessage = $@"{player.Name}: Namnet uppdaterades.";
             _ = HideStatusMessage();
         }
         else
@@ -359,12 +358,14 @@ else
             return;
         }
 
+        var addedName = _newPlayerName.Trim();
         var response = await Http.PostAsync($"/api/match/{Id}/player?playerName={Uri.EscapeDataString(_newPlayerName)}", null);
 
         if (response.IsSuccessStatusCode)
         {
+            _statusMessage = $@"{addedName}: Spelaren lades till.";
             _newPlayerName = string.Empty;
-            _statusMessage = "Spelaren lades till.";
+            _ = HideStatusMessage();
             await LoadMatch();
         }
         else
@@ -379,7 +380,9 @@ else
 
         if (response.IsSuccessStatusCode)
         {
-            _statusMessage = "Spelaren togs bort.";
+            var removedName = player.Name;
+            _statusMessage = $@"{removedName}: Spelaren togs bort.";
+            _ = HideStatusMessage();
             await LoadMatch();
         }
         else
@@ -464,7 +467,7 @@ else
 
             if (success)
             {
-                _statusMessage = "Länken kopierades.";
+                _statusMessage = "Match Länken kopierades.";
                 _ = HideStatusMessage();
             }
             else
@@ -475,6 +478,23 @@ else
         catch
         {
             ShowError("Kunde inte kopiera länken.");
+        }
+    }
+        private string StatusMessageColor
+    {
+        get
+        {
+            if (_statusMessage.Contains("togs bort"))
+                return "red";
+            if (_statusMessage.Contains("lades till"))
+                return "green";
+            if (_statusMessage.Contains("kopierades"))
+                return "orange";
+            if (_statusMessage.Contains("Namnet uppdaterades"))
+                return "blue";
+            if (_statusMessage.Contains("Poängen uppdaterades"))
+                return "purple";
+            return "#1f1f1f"; 
         }
     }
 }
