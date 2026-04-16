@@ -3,10 +3,13 @@
 
 @inject  NavigationManager Nav
 
-<h3>Sidan finns inte</h3>
-<p>Sidan du försökte nå existerar inte.</p>
-@*Lägga in en snitsig bild här??*@
-<button class="return-button" @onclick="ReturnToHome">Startsida</button>
+
+<div class="notfound-container">
+    <img src="/images/404.svg" alt="404" class="notfound-img" />
+    <h3 class="notfound-title">Sidan finns inte</h3>
+    <p class="notfound-text">Sidan du försökte nå existerar inte.</p>
+    <button class="return-button" @onclick="ReturnToHome">Startsida</button>
+</div>
 
 @code {
 
