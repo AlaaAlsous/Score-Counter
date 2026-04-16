@@ -21,88 +21,105 @@ else
 {
     <h3 class="match-title">@_match.GameName</h3>
 
-        <div class="match-info-box">
-            <div class="match-info-row">
-                    <div class="match-info-item">
-                        <strong>Match-ID:</strong>
-                        <span class="match-info-value match-info-id">@_match.Id</span>
-                        <button type="button" class="copy-link-btn" @onclick="CopyMatchLink">Kopiera länk</button>
-                    </div>
-                <div class="match-info-item"><strong>Regler:</strong> <span class="match-info-value">@(_match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")</span></div>
+    @if (_match.IsFinished)
+    {
+        <p style="color: red; font-weight: bold;">Matchen är avslutad.</p>
+    }
+
+    <div class="match-info-box">
+        <div class="match-info-row">
+            <div class="match-info-item">
+                <strong>Match-ID:</strong>
+                <span class="match-info-value match-info-id">@_match.Id</span>
+                <button type="button" class="copy-link-btn" @onclick="CopyMatchLink">Kopiera länk</button>
             </div>
-            <div class="match-info-row">
-                <div class="match-info-item"><strong>Startpoäng:</strong> <span class="match-info-value">@_match.StartScore</span></div>
-                <div class="match-info-item"><strong>Spelare låsta:</strong> <span class="match-info-value">@(_match.PlayersLocked ? "Ja" : "Nej")</span></div>
-                <div class="match-info-item"><strong>Skapad:</strong> <span class="match-info-value">@_match.CreatedAt.ToString("g")</span></div>
-            </div>
+            <div class="match-info-item"><strong>Regler:</strong> <span class="match-info-value">@(_match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")</span></div>
         </div>
-    <form class="match-form" onsubmit="return false">
-
-    <h4>Spelare</h4>
-    @if (!string.IsNullOrWhiteSpace(_statusMessage))
-    {
-        <p style="color: green; margin-bottom: 0.7rem;">@_statusMessage</p>
-    }
-
-    @if (_match.Players.Count == 0)
-    {
-        <p>Inga spelare än.</p>
-    }
-    else
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Namn</th>
-                    <th>Poäng</th>
-                    <th>Åtgärder</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var player in SortedPlayers)
-                {
-                    <tr @key="player.Id">
-                        <td>
-                            <input value="@player.Name"
-                                   @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
-                        </td>
-                        <td>
-                            <input type="text"
-                                   value="@player.Score"
-                                   readonly />
-                        </td>
-                        <td>
-                            <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
-                            <button type="button" @onclick="() => ChangeScore(player, -5)">-5</button>
-                            <button type="button" @onclick="() => ChangeScore(player, 1)">+1</button>
-                            <button type="button" @onclick="() => ChangeScore(player, 5)">+5</button>
-
-                            @if (!_match.PlayersLocked)
-                            {
-                                <button type="button" class="remove-player-btn" @onclick="() => RemovePlayer(player)">Ta bort</button>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-
-    @if (!_match.PlayersLocked)
-    {
-        <h4>Lägg till spelare</h4>
-        <input @bind="_newPlayerName" @onkeyup="HandleKey" placeholder="Spelarnamn" />
-        <button type="button" @onclick="AddPlayer">Lägg till</button>
-    }
-
-    <hr />
-
-    <div class="match-action-row">
-        <button type="button" @onclick="ShowResults" class="match-action-btn">Avsluta match</button>
-        <button type="button" @onclick="ResetMatch" class="match-action-btn">Återställ match</button>
-        <button type="button" @onclick="CloneMatch" class="match-action-btn">Klona match</button>
-        @* <button type="button" @onclick="DeleteMatch">Ta bort match</button> *@
+        <div class="match-info-row">
+            <div class="match-info-item"><strong>Startpoäng:</strong> <span class="match-info-value">@_match.StartScore</span></div>
+            <div class="match-info-item"><strong>Spelare låsta:</strong> <span class="match-info-value">@(_match.PlayersLocked ? "Ja" : "Nej")</span></div>
+            <div class="match-info-item"><strong>Skapad:</strong> <span class="match-info-value">@_match.CreatedAt.ToString("g")</span></div>
+        </div>
     </div>
+
+    <form class="match-form" onsubmit="return false">
+        <h4>Spelare</h4>
+
+        @if (!string.IsNullOrWhiteSpace(_statusMessage))
+        {
+            <p style="color: green; margin-bottom: 0.7rem;">@_statusMessage</p>
+        }
+
+        @if (_match.Players.Count == 0)
+        {
+            <p>Inga spelare än.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Namn</th>
+                        <th>Poäng</th>
+                        <th>Åtgärder</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var player in SortedPlayers)
+                    {
+                        <tr @key="player.Id">
+                            <td>
+                                <input value="@player.Name"
+                                       readonly="@_match.IsFinished"
+                                       @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
+                            </td>
+                            <td>
+                                <input type="text"
+                                       value="@player.Score"
+                                       readonly />
+                            </td>
+                            <td>
+                                @if (!_match.IsFinished)
+                                {
+                                    <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
+                                    <button type="button" @onclick="() => ChangeScore(player, -5)">-5</button>
+                                    <button type="button" @onclick="() => ChangeScore(player, 1)">+1</button>
+                                    <button type="button" @onclick="() => ChangeScore(player, 5)">+5</button>
+                                }
+
+                                @if (!_match.PlayersLocked && !_match.IsFinished)
+                                {
+                                    <button type="button" class="remove-player-btn" @onclick="() => RemovePlayer(player)">Ta bort</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @if (!_match.PlayersLocked && !_match.IsFinished)
+        {
+            <h4>Lägg till spelare</h4>
+            <input @bind="_newPlayerName" @onkeyup="HandleKey" placeholder="Spelarnamn" />
+            <button type="button" @onclick="AddPlayer">Lägg till</button>
+        }
+
+        <hr />
+
+        <div class="match-action-row">
+            @if (!_match.IsFinished)
+            {
+                <button type="button" @onclick="ShowFinishConfirm" class="match-action-btn">Avsluta match</button>
+            }
+            else
+            {
+                <button type="button" @onclick="ShowResults" class="match-action-btn">Visa slutresultat</button>
+            }
+
+            <button type="button" @onclick="ResetMatch" class="match-action-btn">Återställ match</button>
+            <button type="button" @onclick="CloneMatch" class="match-action-btn">Klona match</button>
+        </div>
     </form>
 }
 
@@ -117,6 +134,20 @@ else
     </div>
 }
 </div>
+
+@if (_showFinishConfirmPopup)
+{
+    <div class="popup-backdrop">
+        <div class="popup-box">
+            <h4>Avsluta match</h4>
+            <p>Är du säker på att du vill avsluta matchen? Inga ändringar kan göras efter avslutad match.</p>
+            <div class="match-action-row">
+                <button type="button" class="match-action-btn" @onclick="FinishMatch">Ja, avsluta</button>
+                <button type="button" class="match-action-btn" @onclick="CloseFinishConfirm">Nej, tillbaka</button>
+            </div>
+        </div>
+    </div>
+}
 
 @if (_showResultsPopup && _match is not null)
 {
@@ -183,6 +214,8 @@ else
     private GameMatch? _match;
     private bool _isLoading = true;
     private bool _showErrorPopup;
+    private bool _showResultsPopup;
+    private bool _showFinishConfirmPopup;
     private string _errorMessage = string.Empty;
     private string _newPlayerName = string.Empty;
     private string _statusMessage = string.Empty;
@@ -207,13 +240,14 @@ else
 
     private async Task LoadMatch()
     {
-    try
+        try
         {
             _isLoading = true;
             _statusMessage = string.Empty;
             _showErrorPopup = false;
             _errorMessage = string.Empty;
             _showResultsPopup = false;
+            _showFinishConfirmPopup = false;
 
             _match = await Http.GetFromJsonAsync<GameMatch>($"/api/match/{Id}");
 
@@ -229,8 +263,8 @@ else
         finally
         {
             _isLoading = false;
+        }
     }
-}
 
     private void ShowError(string message)
     {
@@ -238,14 +272,11 @@ else
         _showErrorPopup = true;
     }
 
-    //Det funkade inte att skicka negativ score i http-anropet för MacOS, så jag fick ändra och sätta en 
-    //till variabel för att meddela servern om det är en ökning eller minskning av poängen som ska ske så
-    //ändrade om metoderna och kapade ner till en metod för att underlätta - Astrid
     private async Task ChangeScore(GamePlayer player, int delta)
     {
         var operation = delta < 0 ? "decrease" : "increase";
         var amount = Math.Abs(delta);
-        
+
         var response = await Http.PutAsync(
             $"/api/match/{Id}/player/{player.Id}/score?amount={amount}&operation={operation}", null);
 
@@ -262,8 +293,6 @@ else
         _ = HideStatusMessage();
     }
 
-    private bool _showResultsPopup;
-
     private void ShowResults()
     {
         _showResultsPopup = true;
@@ -272,6 +301,32 @@ else
     private void CloseResults()
     {
         _showResultsPopup = false;
+    }
+
+    private void ShowFinishConfirm()
+    {
+        _showFinishConfirmPopup = true;
+    }
+
+    private void CloseFinishConfirm()
+    {
+        _showFinishConfirmPopup = false;
+    }
+
+    private async Task FinishMatch()
+    {
+        var response = await Http.PostAsync($"/api/match/{Id}/finish", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            _showFinishConfirmPopup = false;
+            await LoadMatch();
+            ShowResults();
+        }
+        else
+        {
+            ShowError(await response.Content.ReadAsStringAsync());
+        }
     }
 
     private async Task UpdatePlayerName(GamePlayer player, string newName)
@@ -288,6 +343,7 @@ else
         {
             player.Name = newName.Trim();
             _statusMessage = "Namnet uppdaterades.";
+            _ = HideStatusMessage();
         }
         else
         {
@@ -334,26 +390,26 @@ else
 
     private async Task ResetMatch()
     {
-    var response = await Http.PostAsync($"/api/match/{Id}/reset", null);
+        var response = await Http.PostAsync($"/api/match/{Id}/reset", null);
 
-    if (response.IsSuccessStatusCode)
-    {
-        var result = await response.Content.ReadFromJsonAsync<CloneResponse>();
-
-        if (result is not null && !string.IsNullOrWhiteSpace(result.Url))
+        if (response.IsSuccessStatusCode)
         {
-            Nav.NavigateTo(result.Url);
+            var result = await response.Content.ReadFromJsonAsync<CloneResponse>();
+
+            if (result is not null && !string.IsNullOrWhiteSpace(result.Url))
+            {
+                Nav.NavigateTo(result.Url);
+            }
+            else
+            {
+                ShowError("Kunde inte skapa en återställd match.");
+            }
         }
         else
         {
-            ShowError("Kunde inte skapa en återställd match.");
+            ShowError(await response.Content.ReadAsStringAsync());
         }
     }
-    else
-    {
-        ShowError(await response.Content.ReadAsStringAsync());
-    }
-}
 
     private async Task CloneMatch()
     {
@@ -378,7 +434,7 @@ else
         }
     }
 
-    async Task HandleKey(KeyboardEventArgs e)
+    private async Task HandleKey(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
