@@ -1,0 +1,5 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="90" cy="90" r="90" fill="#f2f2f2"/>
+  <text x="50%" y="50%" text-anchor="middle" fill="#c0392b" font-size="48" font-family="Arial, Helvetica, sans-serif" dy=".3em">404</text>
+  <text x="50%" y="70%" text-anchor="middle" fill="#888" font-size="18" font-family="Arial, Helvetica, sans-serif">Hittades inte</text>
+</svg>
