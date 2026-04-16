@@ -11,4 +11,5 @@ public class GameMatch
     public List<GamePlayer> Players { get; set; } = new();
     public List<string> OriginalPlayerNames { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsFinished { get; set; } = false;
 }
