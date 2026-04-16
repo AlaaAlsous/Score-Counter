@@ -216,6 +216,25 @@ app.MapDelete("/api/match/{id}/player/{playerId}", (string id, string playerId, 
     return Results.NotFound("Matchen hittades inte.");
 });
 
+        app.MapPost("/api/match/{id}/finish", (string id, MatchStore store) =>
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return Results.BadRequest("Matchens ID krävs.");
+
+            if (store.TryGetMatch(id, out var match))
+            {
+                lock (match!)
+                {
+                    match.IsFinished = true;
+                    store.UpdateMatch(id, match);
+                }
+
+                return Results.Ok(match);
+            }
+
+            return Results.NotFound("Matchen hittades inte.");
+        });
+
 app.MapFallbackToFile("index.html");
 
 app.Run();
