@@ -87,6 +87,8 @@ app.MapPost("/api/match/{id}/player", (string id, string playerName, MatchStore 
     {
         lock (match!)
         {
+            if (match.IsFinished)
+            return Results.BadRequest("Matchen är avslutad och kan inte ändras.");
             if (match.PlayersLocked)
                 return Results.BadRequest("Spelare är låsta för denna match.");
             if (match.Players.Count >= match.MaxPlayers)
@@ -141,6 +143,8 @@ app.MapPut("/api/match/{id}/player/{playerId}/score", (string id, string playerI
     {
         lock (match!)
         {
+            if (match.IsFinished)
+            return Results.BadRequest("Matchen är avslutad och kan inte ändras.");
             var player = match.Players.FirstOrDefault(p => p.Id.ToString() == playerId);
             if (player == null)
                 return Results.NotFound("Spelaren hittades inte i matchen.");
@@ -178,6 +182,8 @@ app.MapPut("/api/match/{id}/player/{playerId}/name", (string id, string playerId
     {
         lock (match!)
         {
+            if (match.IsFinished)
+            return Results.BadRequest("Matchen är avslutad och kan inte ändras.");
             var player = match.Players.FirstOrDefault(p => p.Id.ToString() == playerId);
             if (player == null)
                 return Results.NotFound("Spelaren hittades inte i matchen.");
@@ -204,6 +210,8 @@ app.MapDelete("/api/match/{id}/player/{playerId}", (string id, string playerId, 
     {
         lock (match!)
         {
+            if (match.IsFinished)
+            return Results.BadRequest("Matchen är avslutad och kan inte ändras.");
             var player = match.Players.FirstOrDefault(p => p.Id.ToString() == playerId);
             if (player == null)
                 return Results.NotFound("Spelaren hittades inte i matchen.");
