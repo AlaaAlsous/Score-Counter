@@ -1,13 +1,18 @@
-using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
 using Shared;
+using Backend.Database;
 
 namespace Backend.Services;
 
 public class MatchStore
 {
-    private readonly ConcurrentDictionary<string, GameMatch> _matches = new();
+    private readonly AppDbContext _db;
 
-    // Generera unikt ID (ord + fallback)
+    public MatchStore(AppDbContext db)
+    {
+        _db = db;
+    }
+
     private string GenerateUniqueId()
     {
         var rnd = Random.Shared;
@@ -16,11 +21,9 @@ public class MatchStore
         {
             var id = IdGenerator.Generate(rnd);
 
-            if (!_matches.ContainsKey(id))
+            if (!_db.Matches.Any(m => m.Id == id))
                 return id;
         }
-
-        // fallback om något går fel (just nu typ 5miljon kombinationer så borde inte hända)
         return Guid.NewGuid().ToString("N")[..12];
     }
 
@@ -34,7 +37,6 @@ public class MatchStore
         var match = new GameMatch
         {
             Id = GenerateUniqueId(),
-
             GameName = request.GameName,
             HighScoreWins = request.HighScoreWins,
             MaxPlayers = request.MaxPlayers,
@@ -42,7 +44,6 @@ public class MatchStore
             StartScore = request.StartScore,
 
             OriginalPlayerNames = playerNames.ToList(),
-
             Players = playerNames
                 .Select(n => new GamePlayer
                 {
@@ -52,7 +53,8 @@ public class MatchStore
                 .ToList()
         };
 
-        _matches[match.Id] = match;
+        _db.Matches.Add(match);
+        _db.SaveChanges();
         return match;
     }
 
@@ -64,23 +66,102 @@ public class MatchStore
             return false;
         }
 
-        return _matches.TryGetValue(id, out match);
+        match = _db.Matches
+            .Include(m => m.Players)
+            .FirstOrDefault(m => m.Id == id);
+
+        return match != null;
     }
 
-    public bool UpdateMatch(string id, GameMatch match)
+    public bool UpdateMatch(string id, GameMatch updated)
     {
-        if (string.IsNullOrWhiteSpace(id) || match == null)
+        if (string.IsNullOrWhiteSpace(id) || updated == null)
             return false;
 
-        if (_matches.TryGetValue(id, out var existingMatch))
+        var existing = _db.Matches
+            .Include(m => m.Players)
+            .FirstOrDefault(m => m.Id == id);
+
+        if (existing == null)
+            return false;
+
+        existing.IsFinished = updated.IsFinished;
+        existing.PlayersLocked = updated.PlayersLocked;
+        existing.HighScoreWins = updated.HighScoreWins;
+
+        foreach (var updatedPlayer in updated.Players)
         {
-            lock (existingMatch)
-            {
-                _matches[id] = match;
-            }
-            return true;
+            var existingPlayer = existing.Players.FirstOrDefault(p => p.Id == updatedPlayer.Id);
+            if (existingPlayer != null)
+                existingPlayer.Score = updatedPlayer.Score;
         }
 
-        return false;
+        _db.SaveChanges();
+        return true;
+    }
+
+    public bool AddPlayer(string matchId, string playerName, out GamePlayer? newPlayer)
+    {
+        newPlayer = null;
+        var match = _db.Matches.Include(m => m.Players).FirstOrDefault(m => m.Id == matchId);
+        if (match == null) return false;
+        if (match.IsFinished || match.PlayersLocked) return false;
+        if (match.MaxPlayers > 0 && match.Players.Count >= match.MaxPlayers) return false;
+        if (match.Players.Any(p => p.Name.Equals(playerName, StringComparison.OrdinalIgnoreCase))) return false;
+
+        newPlayer = new GamePlayer { Name = playerName.Trim(), Score = match.StartScore, GameMatchId = matchId };
+        _db.Players.Add(newPlayer);
+        _db.SaveChanges();
+        return true;
+    }
+
+    public bool RemovePlayer(string matchId, Guid playerId, out GamePlayer? removed)
+    {
+        removed = _db.Players.FirstOrDefault(p => p.Id == playerId && p.GameMatchId == matchId);
+        if (removed == null) return false;
+
+        _db.Players.Remove(removed);
+        _db.SaveChanges();
+        return true;
+    }
+
+    public bool UpdatePlayerName(string matchId, Guid playerId, string newName, out GamePlayer? updated)
+    {
+        updated = null;
+        var match = _db.Matches.Include(m => m.Players).FirstOrDefault(m => m.Id == matchId);
+        if (match == null) return false;
+        if (match.IsFinished) return false;
+        if (match.Players.Any(p => p.Name.Equals(newName, StringComparison.OrdinalIgnoreCase))) return false;
+
+        updated = match.Players.FirstOrDefault(p => p.Id == playerId);
+        if (updated == null) return false;
+
+        updated.Name = newName.Trim();
+        _db.SaveChanges();
+        return true;
+    }
+
+    public bool FinishMatch(string matchId, out GameMatch? match)
+    {
+        match = _db.Matches.Include(m => m.Players).FirstOrDefault(m => m.Id == matchId);
+        if (match == null) return false;
+
+        match.IsFinished = true;
+        _db.SaveChanges();
+        return true;
+    }
+
+    public bool UpdatePlayerScore(string matchId, Guid playerId, int? newScore, int? amount, string? operation, out GamePlayer? updated)
+    {
+        updated = _db.Players.FirstOrDefault(p => p.Id == playerId && p.GameMatchId == matchId);
+        if (updated == null) return false;
+
+        if (newScore.HasValue)
+            updated.Score = newScore.Value;
+        else if (amount.HasValue && !string.IsNullOrWhiteSpace(operation))
+            updated.Score += operation == "decrease" ? -amount.Value : amount.Value;
+
+        _db.SaveChanges();
+        return true;
     }
 }
