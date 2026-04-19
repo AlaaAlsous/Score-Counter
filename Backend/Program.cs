@@ -33,14 +33,34 @@ else
     var secret = await client.GetSecretAsync("SqlScoreCounterConnectionString");
     var connectionString = secret.Value.Value;
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(connectionString));
+        options.UseSqlServer(connectionString, sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        }));
 }
 
 var app = builder.Build();
 
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-db.Database.EnsureCreated();
+var retries = 0;
+while (retries < 5)
+{
+    try
+    {
+        db.Database.EnsureCreated();
+        break;
+    }
+    catch (Exception ex)
+    {
+        retries++;
+        Console.WriteLine($"DB not ready, retry {retries}/5: {ex.Message}");
+        await Task.Delay(TimeSpan.FromSeconds(5));
+    }
+}
 
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
