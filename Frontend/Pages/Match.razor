@@ -5,13 +5,15 @@
 @inject NavigationManager Nav
 @inject IJSRuntime JS
 
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+
 <PageTitle>Match</PageTitle>
 <div class="match-container">
     <span class="match-info-label">Matchinformation</span>
 
 @if (_isLoading)
-{
-    <p>Laddar matchinformation...</p>
+{ <p>Laddar matchinformation...</p>
 }
 else if (_match is null)
 {
@@ -220,6 +222,8 @@ else
     private string _newPlayerName = string.Empty;
     private string _statusMessage = string.Empty;
 
+    private HubConnection? _hub;
+
     private IEnumerable<GamePlayer> SortedPlayers =>
         _match is null
             ? Enumerable.Empty<GamePlayer>()
@@ -229,7 +233,61 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        if (_hub is not null)
+        {
+            await _hub.SendAsync("LeaveMatch", Id);
+            await _hub.DisposeAsync();
+        }
+
+        _hub = new HubConnectionBuilder()
+            .WithUrl(Nav.ToAbsoluteUri("/matchevents"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hub.On<Guid, int>("ScoreChanged", (playerId, newScore) =>
+        {
+            var player = _match?.Players.FirstOrDefault(p => p.Id == playerId);
+            if (player is not null)
+            {
+                player.Score = newScore;
+                InvokeAsync(StateHasChanged);
+            }
+        });
+
+        _hub.On<Guid, string>("PlayerRenamed", (playerId, newName) =>
+        {
+            var player = _match?.Players.FirstOrDefault(p => p.Id == playerId);
+            if (player is not null)
+            {
+                player.Name = newName;
+                InvokeAsync(StateHasChanged);
+            }
+        });
+
+        _hub.On<GamePlayer>("PlayerAdded", _ =>
+            InvokeAsync(LoadMatch));
+
+        _hub.On<string>("PlayerRemoved", _ =>
+            InvokeAsync(LoadMatch));
+
+        _hub.On("MatchFinished", () =>
+            InvokeAsync(LoadMatch));
+
+        _hub.On<string>("MatchReset", newUrl =>
+            InvokeAsync(() => Nav.NavigateTo(newUrl)));
+
+        await _hub.StartAsync();
+        await _hub.SendAsync("JoinMatch", Id);
         await LoadMatch();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hub is not null)
+        {
+            await _hub.SendAsync("LeaveMatch", Id);
+            await _hub.DisposeAsync();
+        }
     }
 
     private void CloseErrorPopup()
@@ -262,6 +320,7 @@ else
         finally
         {
             _isLoading = false;
+            StateHasChanged(); 
         }
     }
 

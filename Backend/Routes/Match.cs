@@ -1,4 +1,6 @@
+using Backend.Hubs;
 using Backend.Services;
+using Microsoft.AspNetCore.SignalR;
 using Shared;
 
 public static class MatchEndpoints
@@ -23,7 +25,7 @@ public static class MatchEndpoints
             return Results.Created(url, new MatchResponseDto { Id = match.Id, Url = url });
         });
 
-        app.MapPost("/api/match/{id}/reset", (string id, MatchStore store) =>
+        app.MapPost("/api/match/{id}/reset", async (string id, MatchStore store, IHubContext<MatchEventHub> hub) =>
         {
             if (string.IsNullOrWhiteSpace(id))
                 return Results.BadRequest("Matchens ID krävs.");
@@ -41,10 +43,11 @@ public static class MatchEndpoints
             };
             var newMatch = store.CreateMatch(resetRequest);
             var url = $"/match/{newMatch.Id}";
+            await hub.Clients.Group(id).SendAsync("MatchReset", url);
             return Results.Created(url, new MatchResponseDto { Id = newMatch.Id, Url = url });
         });
 
-        app.MapPost("/api/match/{id}/clone", (string id, MatchStore store) =>
+        app.MapPost("/api/match/{id}/clone", (string id, MatchStore store, IHubContext<MatchEventHub> hub) =>
         {
             if (string.IsNullOrWhiteSpace(id))
                 return Results.BadRequest("Matchen ID är required.");
@@ -65,7 +68,7 @@ public static class MatchEndpoints
             return Results.Created(url, new MatchResponseDto { Id = clonedMatch.Id, Url = url });
         });
 
-        app.MapPost("/api/match/{id}/player", (string id, string playerName, MatchStore store) =>
+        app.MapPost("/api/match/{id}/player", async (string id, string playerName, MatchStore store, IHubContext<MatchEventHub> hub) =>
         {
             if (string.IsNullOrWhiteSpace(id)) return Results.BadRequest("Matchen ID är required.");
             if (string.IsNullOrWhiteSpace(playerName)) return Results.BadRequest("Spelarnamn är required.");
@@ -77,10 +80,11 @@ public static class MatchEndpoints
                 return Results.BadRequest("Spelarnamnet finns redan i denna match.");
 
             store.AddPlayer(id, playerName, out var newPlayer);
+            await hub.Clients.Group(id).SendAsync("PlayerAdded", newPlayer);
             return Results.Ok(newPlayer);
         });
 
-        app.MapPut("/api/match/{id}/player/{playerId}/score", (string id, string playerId, int? newScore, int? amount, string? operation, MatchStore store) =>
+        app.MapPut("/api/match/{id}/player/{playerId}/score", async (string id, string playerId, int? newScore, int? amount, string? operation, MatchStore store, IHubContext<MatchEventHub> hub) =>
         {
             if (string.IsNullOrWhiteSpace(id)) return Results.BadRequest("Matchen ID är required.");
             if (string.IsNullOrWhiteSpace(playerId)) return Results.BadRequest("Spelarens ID är required.");
@@ -92,10 +96,11 @@ public static class MatchEndpoints
 
             if (!store.UpdatePlayerScore(id, playerGuid, newScore, amount, operation, out var updated))
                 return Results.NotFound("Spelaren hittades inte i matchen.");
+            await hub.Clients.Group(id).SendAsync("ScoreChanged", playerId, updated!.Score);
             return Results.Ok(updated);
         });
 
-        app.MapPut("/api/match/{id}/player/{playerId}/name", (string id, string playerId, string newName, MatchStore store) =>
+        app.MapPut("/api/match/{id}/player/{playerId}/name", async (string id, string playerId, string newName, MatchStore store, IHubContext<MatchEventHub> hub) =>
         {
             if (string.IsNullOrWhiteSpace(id)) return Results.BadRequest("Matchen ID är required.");
             if (string.IsNullOrWhiteSpace(playerId)) return Results.BadRequest("Spelarens ID är required.");
@@ -106,10 +111,11 @@ public static class MatchEndpoints
 
             if (!store.UpdatePlayerName(id, playerGuid, newName, out var updated))
                 return Results.NotFound("Spelaren hittades inte eller namnet är redan taget.");
+            await hub.Clients.Group(id).SendAsync("PlayerRenamed", playerId, newName.Trim());
             return Results.Ok(updated);
         });
 
-        app.MapDelete("/api/match/{id}/player/{playerId}", (string id, string playerId, MatchStore store) =>
+        app.MapDelete("/api/match/{id}/player/{playerId}", async (string id, string playerId, MatchStore store, IHubContext<MatchEventHub> hub) =>
         {
             if (string.IsNullOrWhiteSpace(id)) return Results.BadRequest("Matchen ID är required.");
             if (string.IsNullOrWhiteSpace(playerId)) return Results.BadRequest("Spelarens ID är required.");
@@ -119,13 +125,15 @@ public static class MatchEndpoints
 
             if (!store.RemovePlayer(id, playerGuid, out var removed))
                 return Results.NotFound("Spelaren hittades inte i matchen.");
+            await hub.Clients.Group(id).SendAsync("PlayerRemoved", playerId);
             return Results.Ok(removed);
         });
 
-        app.MapPost("/api/match/{id}/finish", (string id, MatchStore store) =>
+        app.MapPost("/api/match/{id}/finish", async (string id, MatchStore store, IHubContext<MatchEventHub> hub) =>
         {
             if (string.IsNullOrWhiteSpace(id)) return Results.BadRequest("Matchens ID krävs.");
             if (!store.FinishMatch(id, out var match)) return Results.NotFound("Matchen hittades inte.");
+            await hub.Clients.Group(id).SendAsync("MatchFinished");
             return Results.Ok(match);
         });
     }

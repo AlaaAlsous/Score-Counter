@@ -5,6 +5,7 @@ using Backend.Database;
 using Microsoft.EntityFrameworkCore;
 using Azure.Security.KeyVault.Secrets;
 using Azure.Identity;
+using Backend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
@@ -17,6 +18,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddScoped<MatchStore>();
+builder.Services.AddSignalR();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -44,7 +46,7 @@ app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 app.UseCors();
 app.MapMatchEndpoints();
-
+app.MapHub<MatchEventHub>("/matchevents");
 app.MapFallbackToFile("index.html");
 
 app.Run();
