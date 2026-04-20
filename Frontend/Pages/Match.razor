@@ -60,39 +60,37 @@ else
         {
             <table class="table">
                 <thead>
-                    <tr>
-                        <th>Namn</th>
-                        <th>Poäng</th>
-                        <th>Åtgärder</th>
+                    <tr class="player-header-row">
+                        <th style="grid-column: 1;">Namn &amp; Poäng</th>
+                        <th style="grid-column: 2;">Åtgärder</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var player in SortedPlayers)
                     {
                         <tr @key="player.Id">
-                            <td>
-                                <input value="@player.Name"
-                                       readonly="@_match.IsFinished"
-                                       @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
-                            </td>
-                            <td>
-                                <input type="text"
-                                       value="@player.Score"
-                                       readonly />
-                            </td>
-                            <td>
-                                @if (!_match.IsFinished)
-                                {
-                                    <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
-                                    <button type="button" @onclick="() => ChangeScore(player, -5)">-5</button>
-                                    <button type="button" @onclick="() => ChangeScore(player, 1)">+1</button>
-                                    <button type="button" @onclick="() => ChangeScore(player, 5)">+5</button>
-                                }
-
-                                @if (!_match.PlayersLocked && !_match.IsFinished)
-                                {
-                                    <button type="button" class="remove-player-btn" @onclick="() => RemovePlayer(player)">Ta bort</button>
-                                }
+                            <td colspan="3" class="player-row">
+                                <div class="player-info-row">
+                                    <input value="@player.Name"
+                                           readonly="@_match.IsFinished"
+                                           @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
+                                    <input type="text"
+                                           value="@player.Score"
+                                           readonly />
+                                </div>
+                                <div class="player-actions-row">
+                                    @if (!_match.IsFinished)
+                                    {
+                                        <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
+                                        <button type="button" @onclick="() => ChangeScore(player, -5)">-5</button>
+                                        <button type="button" @onclick="() => ChangeScore(player, 1)">+1</button>
+                                        <button type="button" @onclick="() => ChangeScore(player, 5)">+5</button>
+                                    }
+                                    @if (!_match.PlayersLocked && !_match.IsFinished)
+                                    {
+                                        <button type="button" class="remove-player-btn" @onclick="() => RemovePlayer(player)">Ta bort</button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
