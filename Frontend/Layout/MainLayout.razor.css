@@ -1,17 +1,23 @@
-html, main {
+html, body {
   margin: 0;
-  height: 100vh;
-  background-color: #d6d5d5;
+  height: 100%;
+  overflow: auto;
+}
+
+body {
+  overflow: auto;
 }
 
 .page {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 main {
   flex: 1;
+  background-color: #d6d5d5;
 }
 
 .sidebar {
