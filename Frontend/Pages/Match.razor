@@ -252,6 +252,8 @@ else
             if (player is not null)
             {
                 player.Score = newScore;
+                _statusMessage = $"{player.Name}: Poängen uppdaterades.";
+                _ = HideStatusMessage();
                 InvokeAsync(StateHasChanged);
             }
         });
@@ -345,11 +347,6 @@ else
             ShowError("Poängen gick inte att ändra");
             return;
         }
-
-        _statusMessage = $@"{player.Name}: Poängen uppdaterades.";
-        StateHasChanged();
-
-        _ = HideStatusMessage();
     }
 
     private void ShowResults()
