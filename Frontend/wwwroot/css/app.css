@@ -22,9 +22,7 @@ a, .btn-link {
 
 .content {
     padding-top: 1.1rem;
-    background: #c1b59973;
     border-radius: 1rem;
-    box-shadow: 0 2px 16px #00000014;
 }
 
 .valid.modified:not([type=checkbox]) {
