@@ -164,4 +164,25 @@ public class MatchStore
         _db.SaveChanges();
         return true;
     }
+
+    public bool CheckNameForUniqueness(string name, string playerId, string matchId)
+    {
+        if (!Guid.TryParse(playerId, out var playerGuid))
+            return false;
+
+        var match = _db.Matches
+            .Include(m => m.Players)
+            .FirstOrDefault(m => m.Id == matchId);
+
+        if (match == null)
+            return false;
+
+        var trimmedName = name.Trim();
+
+        var exists = match.Players.Any(p =>
+            p.Id != playerGuid &&
+            p.Name.Equals(trimmedName, StringComparison.OrdinalIgnoreCase));
+
+        return !exists;
+    }
 }

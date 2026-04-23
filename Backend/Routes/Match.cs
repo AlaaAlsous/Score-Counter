@@ -105,6 +105,7 @@ public static class MatchEndpoints
             if (string.IsNullOrWhiteSpace(id)) return Results.BadRequest("Matchen ID är required.");
             if (string.IsNullOrWhiteSpace(playerId)) return Results.BadRequest("Spelarens ID är required.");
             if (string.IsNullOrWhiteSpace(newName)) return Results.BadRequest("Nytt namn är required.");
+            if (!store.CheckNameForUniqueness(id, newName, playerId)) return Results.BadRequest("Namnet är redan taget.");
             if (!Guid.TryParse(playerId, out var playerGuid)) return Results.BadRequest("Ogiltigt spelar-ID.");
             if (!store.TryGetMatch(id, out var match)) return Results.NotFound("Matchen hittades inte.");
             if (match!.IsFinished) return Results.BadRequest("Matchen är avslutad och kan inte ändras.");

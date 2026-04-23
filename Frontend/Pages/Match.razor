@@ -389,9 +389,12 @@ else
 
     private async Task UpdatePlayerName(GamePlayer player, string newName)
     {
+        var originalName = player.Name;
+
         if (string.IsNullOrWhiteSpace(newName))
         {
             ShowError("Spelarnamnet får inte vara tomt.");
+            player.Name = originalName;
             return;
         }
 
@@ -405,6 +408,7 @@ else
         }
         else
         {
+            player.Name = originalName;
             ShowError(await response.Content.ReadAsStringAsync());
         }
     }
