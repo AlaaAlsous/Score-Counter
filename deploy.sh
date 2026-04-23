@@ -1,8 +1,8 @@
 #!/bin/bash
 BUILD_TARGET="linux-x64"
 BUILD_FOLDER="./Backend/publish"
-WEBAPP_NAME="scorecounter"
-RESOURCE_GROUP="RG_ScoreCounter"
+WEBAPP_NAME="scorecounter-linux"
+RESOURCE_GROUP="rg_scorecounter"
 
 rm -f /tmp/archive.zip
 rm -rf ${BUILD_FOLDER}
