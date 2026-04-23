@@ -165,7 +165,7 @@ public class MatchStore
         return true;
     }
 
-    public bool CheckNameForUniqueness(string name, string playerId, string matchId)
+    public bool CheckNameForUniqueness(string matchId, string newName, string playerId)
     {
         if (!Guid.TryParse(playerId, out var playerGuid))
             return false;
@@ -177,7 +177,7 @@ public class MatchStore
         if (match == null)
             return false;
 
-        var trimmedName = name.Trim();
+        var trimmedName = newName.Trim();
 
         var exists = match.Players.Any(p =>
             p.Id != playerGuid &&

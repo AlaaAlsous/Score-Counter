@@ -71,9 +71,10 @@ else
                         <tr @key="player.Id">
                             <td colspan="3" class="player-row">
                                 <div class="player-info-row">
-                                    <input value="@player.Name"
-                                           readonly="@_match.IsFinished"
-                                           @onchange="e => UpdatePlayerName(player, e.Value?.ToString() ?? string.Empty)" />
+                                     <input value="@(_editingPlayerId == player.Id ? _editingName : player.Name)"
+                                         readonly="@_match.IsFinished"
+                                         @oninput="e => StartEditName(player, e.Value?.ToString() ?? string.Empty)"
+                                         @onchange="e => ConfirmEditName(player)" />
                                     <input type="text"
                                            value="@player.Score"
                                            readonly />
@@ -387,29 +388,41 @@ else
         }
     }
 
-    private async Task UpdatePlayerName(GamePlayer player, string newName)
-    {
-        var originalName = player.Name;
+    private Guid? _editingPlayerId = null;
+    private string _editingName = string.Empty;
 
+    private void StartEditName(GamePlayer player, string value)
+    {
+        _editingPlayerId = player.Id;
+        _editingName = value;
+    }
+
+    private async Task ConfirmEditName(GamePlayer player)
+    {
+        var newName = _editingName;
+        var originalName = player.Name;
         if (string.IsNullOrWhiteSpace(newName))
         {
             ShowError("Spelarnamnet får inte vara tomt.");
-            player.Name = originalName;
+            _editingName = originalName;
+            StateHasChanged();
             return;
         }
 
         var response = await Http.PutAsync($"/api/match/{Id}/player/{player.Id}/name?newName={Uri.EscapeDataString(newName)}", null);
-
         if (response.IsSuccessStatusCode)
         {
             player.Name = newName.Trim();
             _statusMessage = $@"{player.Name}: Namnet uppdaterades.";
+            _editingPlayerId = null;
+            _editingName = string.Empty;
             _ = HideStatusMessage();
         }
         else
         {
-            player.Name = originalName;
+            _editingName = originalName;
             ShowError(await response.Content.ReadAsStringAsync());
+            StateHasChanged();
         }
     }
 
