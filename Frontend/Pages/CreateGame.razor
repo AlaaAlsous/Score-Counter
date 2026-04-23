@@ -43,7 +43,17 @@
             Spärra möjlighet att lägga till fler spelare när matchen startats
         </label>
 
-        <button type="submit" @onclick="CreateNewGame">Skapa match</button>
+        <button type="submit" @onclick="CreateNewGame" disabled="@_isCreating">
+            @if (_isCreating)
+            {
+                <span class="spinner"></span>
+                <span>Skapar match...</span>
+            }
+            else
+            {
+                <span>Skapa match</span>
+            }
+        </button>
     </div>
 </div>
 
@@ -70,11 +80,12 @@
     bool _playersLocked;
     private bool _showErrorPopup = false;
     private string _errorMessage = string.Empty;
-    
+    private bool _isCreating = false;
+
     void AddPlayer()
     {
         if (_playerNames.Count >= _maxPlayers)
-        { 
+        {
             return;
         }
 
@@ -89,7 +100,7 @@
             ShowError("Ange ett spelarnamn");
             return;
         }
-        
+
         _playerNames.Add(_player);
         _player = "";
     }
@@ -99,13 +110,13 @@
         _errorMessage = message;
         _showErrorPopup = true;
     }
-    
+
     private void CloseErrorPopup()
     {
         _showErrorPopup = false;
         _errorMessage = string.Empty;
     }
-    
+
     async Task CreateNewGame()
     {
         if (string.IsNullOrWhiteSpace(_gameName))
@@ -113,7 +124,9 @@
             ShowError("Ange namn för ditt spel");
             return;
         }
-        
+
+        _isCreating = true;
+
         var game = new MatchRequestDto
         {
             GameName = _gameName,
@@ -126,10 +139,12 @@
 
         var response = await Http.PostAsJsonAsync("api/match", game);
 
+        _isCreating = false;
+
         if (response.IsSuccessStatusCode)
         {
             var createdGame = await response.Content.ReadFromJsonAsync<MatchResponseDto>();
-            
+
             if (createdGame != null)
             {
                 NavManager.NavigateTo(createdGame.Url);
