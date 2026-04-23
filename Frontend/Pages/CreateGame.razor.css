@@ -17,7 +17,10 @@
   gap: 1.2rem;
   width: 100%;
   max-height: calc(100vh - 150px);
-  overflow-y: auto;
+  overflow-y: scroll;
+  padding: 1.2rem;
+  box-sizing: border-box;
+  scrollbar-gutter: stable;
 }
 
 .create-game-form input,
