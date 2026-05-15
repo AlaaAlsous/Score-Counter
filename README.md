@@ -3,9 +3,12 @@
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
 ![C#](https://img.shields.io/badge/C%23-239120?logo=csharp&logoColor=white)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-5C2D91?logo=dotnet&logoColor=white)
+![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoftazure&logoColor=white)
+![Azure SQL](https://img.shields.io/badge/Azure%20SQL-CC2927?logo=microsoftsqlserver&logoColor=white)
+![Azure Key Vault](https://img.shields.io/badge/Azure%20Key%20Vault-0078D4?logo=microsoftazure&logoColor=white)
+![Azure SQL Database](https://img.shields.io/badge/Azure%20SQL%20Database-CC2927?logo=microsoftsqlserver&logoColor=white)
 ![SignalR](https://img.shields.io/badge/SignalR-512BD4?logo=dotnet&logoColor=white)
 ![Entity Framework Core](https://img.shields.io/badge/EF%20Core-68217A?logo=dotnet&logoColor=white)
-![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoftazure&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 <p align="center">
