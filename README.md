@@ -1,35 +1,158 @@
-# Poängräknaren
+# ScoreCounter (Poängräknaren)
 
-## Om programmet
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-239120?logo=csharp&logoColor=white)
+![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-5C2D91?logo=dotnet&logoColor=white)
+![SignalR](https://img.shields.io/badge/SignalR-512BD4?logo=dotnet&logoColor=white)
+![Entity Framework Core](https://img.shields.io/badge/EF%20Core-68217A?logo=dotnet&logoColor=white)
+![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoftazure&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-Poängräknaren är en webbapplikation som tillåter användaren att hålla reda på poäng för en till flera spelare/deltagare i valfri aktivitet. Den kan exempelvis användas för att hålla reda på poäng vid sällskapsspel, idrottsmatcher eller lekar. Användaren kan själv via inställningar skapa en ny match och välja vilka regler som ska gälla:
+<p align="center">
+  <img src="Images/CreateMatch.png" width="300"/>
+</p>
 
-- om målet är att få många eller få poäng
-- vilka spelare som ska delta
-- max antal spelare i matchen
+<p align="center">
+  <img src="Images/Match.png" width="300"/>
+</p>
 
-Det går också att låsa inställningar så att det inte går att lägga till fler spelare när matchen skapats.
+## Beskrivning
 
-![SkapaMatch](Images/CreateMatch.png)
+ScoreCounter är en realtidsapplikation för att skapa och hantera matcher med spelare och poäng.
 
-När en match skapats går det att kopiera länken till matchens id för att skicka till deltagarna. Dessa kan sedan i realtid lägga till/ta bort poäng för spelarna i matchen. Efter att matchen är klar kan den avslutas och resultaten från matchen visas. Det finns även möjlighet att återställa matchen till ursprungsinställningarna som gjordes samt klona matchen om en ny match vill påbörjas.
+Systemet låter användare skapa matcher, lägga till spelare och uppdatera poäng i realtid med hjälp av SignalR.
 
-![AktivMatch](Images/Match.png)
+Alla ändringar uppdateras direkt i alla anslutna klienter.
 
-En deltagare som vill ansluta till eller se resultat av en match kan via Match-knappen i menyn skriva in sitt match-id och se aktuell information.
+Systemet låter användare:
 
-![GåTillMatch](Images/GoToMatch.png)
+- Skapa matcher
+- Lägga till och ta bort spelare
+- Uppdatera poäng i realtid
+- Klona eller återställa matcher
+- Avsluta matcher
+- Följa uppdateringar direkt via SignalR
 
-## Så här startar du programmet
+---
 
-I utvecklarläge kan programmet startas genom att i root directory skriva
+## Funktioner
 
-```bash
-cd Backend
+### Matchhantering
+
+- Skapa match med valfritt spelnamn
+- Sätta max antal spelare
+- Låsa spelare
+- Avsluta match
+- Klona match
+- Reset match till ursprungsläge
+
+### Spelare
+
+- Lägg till spelare
+- Ta bort spelare
+- Byt namn
+- Kontroll av duplicerade namn
+- Poängsystem (öka / minska / sätt direkt)
+
+### Poängsystem
+
+- Öka poäng
+- Minska poäng
+- Sätt exakt poäng
+- Realtidsuppdatering
+
+### Realtid (SignalR)
+
+- PlayerAdded
+- PlayerRemoved
+- PlayerRenamed
+- ScoreChanged
+- MatchReset
+- MatchFinished
+
+---
+
+## Arkitektur
+
+Projektet är uppdelat i tre huvuddelar:
+
+### Backend
+
+- ASP.NET Core Minimal API
+- SignalR Hub
+- Entity Framework Core
+- MatchStore
+- SQLite (development)
+- SQL Server (production / Azure)
+
+### Frontend
+
+- Blazor WebAssembly
+- Responsiv UI
+- Sidebar navigation
+- Realtidsuppdatering
+
+### Shared
+
+- Delade modeller (GameMatch, GamePlayer)
+- DTOs (Data Transfer Objects)
+- Gemensamma regler och kontrakt
+- Säkerställer att backend och frontend använder samma datastruktur
+
+---
+
+### API Endpoints
+
+#### Match
+
+- `GET /api/match/{id}` → Hämta match
+- `POST /api/match` → Skapa match
+- `POST /api/match/{id}/reset` → Reset match
+- `POST /api/match/{id}/clone` → Klona match
+- `POST /api/match/{id}/finish` → Avsluta match
+
+---
+
+#### Spelare
+
+- `POST /api/match/{id}/player` → Lägg till spelare
+- `PUT /api/match/{id}/player/{playerId}/score` → Uppdatera poäng
+- `PUT /api/match/{id}/player/{playerId}/name` → Byt namn
+- `DELETE /api/match/{id}/player/{playerId}` → Ta bort spelare
+
+---
+
+### SignalR Hub
+
+Endpoint: /matchevents
+
+---
+
+## Flöde i systemet
+
+- Skapa match
+- Lägg till spelare
+- Anslut klienter via SignalR
+- Uppdatera poäng
+- Realtidsuppdatering till alla klienter
+- Avsluta eller reset match
+
+## Så här kör du programmet
+
+```
+cd ScoreCounter
 dotnet run
 ```
 
-### Publicering till Azure Portal
+## Konfiguration
+
+- Lokal databas
+  `Data Source=scorecounter.db`
+- Produktion
+  - Azure SQL Server
+  - Azure Key Vault
+
+## Publicering till Azure Portal
 
 Programmet är förberett för att hostas på Microsoft Azure. Följ dessa steg för att sätta upp allt via Azure Portal:
 
@@ -51,3 +174,23 @@ Programmet är förberett för att hostas på Microsoft Azure. Följ dessa steg 
 5. **Ge Key Vault access till App Service**
    - Gå till Key Vault > Access control (IAM) > Lägg till rolltilldelning.
    - Välj rollen "Key Vault Secrets User" och välj din App Service som principal.
+
+---
+
+## Tekniker
+
+- ASP.NET Core
+- Blazor WebAssembly
+- SignalR
+- Entity Framework Core
+- SQLite / SQL Server
+- Azure
+
+---
+
+## Utvecklare
+
+- Alaa Alsous
+- Astrid Skoglund
+- Andreas Fransson
+- Daniel Viklund
