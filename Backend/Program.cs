@@ -27,10 +27,14 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    var keyVaultUri = "https://KV-ScoreCounter.vault.azure.net";
-    var client = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
-    var secret = await client.GetSecretAsync("SqlScoreCounterConnectionString");
-    var connectionString = secret.Value.Value;
+    var connectionString = Environment.GetEnvironmentVariable("SqlScoreCounterConnectionString");
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        var keyVaultUri = "https://KV-ScoreCounter.vault.azure.net";
+        var client = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+        var secret = await client.GetSecretAsync("SqlScoreCounterConnectionString");
+        connectionString = secret.Value.Value;
+    }
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(connectionString, sqlOptions =>
         {
@@ -43,21 +47,22 @@ else
 
 var app = builder.Build();
 
-using var scope = app.Services.CreateScope();
-var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-var retries = 0;
-while (retries < 5)
+using (var scope = app.Services.CreateScope())
 {
-    try
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var retries = 0;
+    while (retries < 5)
     {
-        db.Database.EnsureCreated();
-        break;
-    }
-    catch (Exception ex)
-    {
-        retries++;
-        Console.WriteLine($"DB not ready, retry {retries}/5: {ex.Message}");
-        await Task.Delay(TimeSpan.FromSeconds(5));
+        try
+        {
+            db.Database.EnsureCreated();
+            break;
+        }
+        catch
+        {
+            retries++;
+            await Task.Delay(TimeSpan.FromSeconds(5));
+        }
     }
 }
 

@@ -11,7 +11,7 @@ Write-Host "🧹 Cleaning..."
 Remove-Item ".\bin\Release" -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
 
 Write-Host "📦 Publishing..."
-dotnet publish -c Release -o $PUBLISH_DIR
+dotnet publish Backend\Backend.csproj -c Release -o $PUBLISH_DIR
 
 Write-Host "🧹 Cleaning PDB files..."
 Remove-Item "$PUBLISH_DIR\*.pdb" -Force -Confirm:$false -ErrorAction SilentlyContinue
