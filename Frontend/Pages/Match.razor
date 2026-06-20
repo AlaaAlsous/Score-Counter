@@ -277,6 +277,8 @@ else
     }
 
     private HubConnection? _hub;
+    private string _currentHubMatchId = string.Empty;
+    private readonly SemaphoreSlim _scoreLock = new(1, 1);
 
     private IEnumerable<GamePlayer> Players =>
         _match?.Players ?? Enumerable.Empty<GamePlayer>();
@@ -288,18 +290,9 @@ else
                 ? _match.Players.OrderByDescending(p => p.Score)
                 : _match.Players.OrderBy(p => p.Score);
 
-    protected override async Task OnParametersSetAsync()
+    private void RegisterHubHandlers()
     {
-        if (_hub is not null)
-        {
-            await _hub.SendAsync("LeaveMatch", Id);
-            await _hub.DisposeAsync();
-        }
-
-        _hub = new HubConnectionBuilder()
-            .WithUrl(Nav.ToAbsoluteUri("/matchevents"))
-            .WithAutomaticReconnect()
-            .Build();
+        if (_hub is null) return;
 
         _hub.On<Guid, int>("ScoreChanged", (playerId, newScore) =>
         {
@@ -334,19 +327,77 @@ else
 
         _hub.On<string>("MatchReset", newUrl =>
             InvokeAsync(() => Nav.NavigateTo(newUrl)));
+    }
 
-        await _hub.StartAsync();
-        await _hub.SendAsync("JoinMatch", Id);
+    protected override async Task OnInitializedAsync()
+    {
+        await EnsureHubConnection();
+        RegisterHubHandlers();
         await LoadMatch();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id != _currentHubMatchId)
+        {
+            await JoinCurrentMatch();
+            await LoadMatch();
+        }
+    }
+
+    private async Task EnsureHubConnection()
+    {
+        if (_hub is not null && _hub.State == HubConnectionState.Connected)
+            return;
+
+        if (_hub is not null)
+        {
+            await _hub.DisposeAsync();
+        }
+
+        _hub = new HubConnectionBuilder()
+            .WithUrl(Nav.ToAbsoluteUri("/matchevents"))
+            .WithAutomaticReconnect()
+            .Build();
+    }
+
+    private async Task JoinCurrentMatch()
+    {
+        await EnsureHubConnection();
+
+        if (_hub is null)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(_currentHubMatchId) && _hub.State == HubConnectionState.Connected)
+        {
+            await _hub.SendAsync("LeaveMatch", _currentHubMatchId);
+        }
+
+        if (_hub.State != HubConnectionState.Connected)
+        {
+            await _hub.StartAsync();
+        }
+
+        await _hub.SendAsync("JoinMatch", Id);
+        _currentHubMatchId = Id;
     }
 
     public async ValueTask DisposeAsync()
     {
         if (_hub is not null)
         {
-            await _hub.SendAsync("LeaveMatch", Id);
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(_currentHubMatchId) && _hub.State == HubConnectionState.Connected)
+                {
+                    await _hub.SendAsync("LeaveMatch", _currentHubMatchId);
+                }
+            }
+            catch { }
             await _hub.DisposeAsync();
         }
+
+        _scoreLock.Dispose();
     }
 
     private void CloseErrorPopup()
@@ -391,21 +442,39 @@ else
 
     private async Task ChangeScore(GamePlayer player, int delta)
     {
-        var operation = delta < 0 ? "decrease" : "increase";
-        var amount = Math.Abs(delta);
-
-        var response = await Http.PutAsync(
-            $"/api/match/{Id}/player/{player.Id}/score?amount={amount}&operation={operation}", null);
-
-        if (!response.IsSuccessStatusCode)
+        await _scoreLock.WaitAsync();
+        try
         {
-            ShowError("Could not change the score");
-            return;
-        }
+            var operation = delta < 0 ? "decrease" : "increase";
+            var amount = Math.Abs(delta);
+            var originalScore = player.Score;
+            var originalName = player.Name;
 
-        if (_customScoreAmounts.Remove(player.Id))
-        {
+            player.Score += delta;
+            _statusMessage = $"{player.Name}: {delta:+#;-#} ({player.Score})";
+            _ = HideStatusMessage();
             StateHasChanged();
+
+            var response = await Http.PutAsync(
+                $"/api/match/{Id}/player/{player.Id}/score?amount={amount}&operation={operation}", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                player.Score = originalScore;
+                _statusMessage = string.Empty;
+                ShowError(await response.Content.ReadAsStringAsync());
+                StateHasChanged();
+                return;
+            }
+
+            if (_customScoreAmounts.Remove(player.Id))
+            {
+                StateHasChanged();
+            }
+        }
+        finally
+        {
+            _scoreLock.Release();
         }
     }
 
