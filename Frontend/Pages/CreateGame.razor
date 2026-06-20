@@ -3,68 +3,83 @@
 @inject HttpClient Http
 @inject NavigationManager NavManager
 
-<PageTitle>Skapa match</PageTitle>
+    <PageTitle>Create Match</PageTitle>
 
-<div class="create-game-container">
-    <div class="create-game-form">
-        <label for="gameName">Namn på spel</label>
-        <input id="gameName" @bind="_gameName" placeholder="Skriv in namnet på din sport/ditt spel här" />
+<div class="card create-game-card">
+    <div class="card-header">
+        <h3>🎯 Create New Match</h3>
+    </div>
+    <div class="card-body">
+        <div class="create-game-form">
+            <label for="gameName">Game Name</label>
+            <input id="gameName" class="form-input" @bind="_gameName" placeholder="E.g. Yahtzee, Billiards, Card Game..." />
 
-        <label for="startScore">Startpoäng för spelare</label>
-        <input id="startScore" type="number" @bind="_startScore" />
+            <label for="startScore">Starting Score</label>
+            <input id="startScore" class="form-input" type="number" @bind="_startScore" />
 
-        <label for="orderByPoints">Vad är målet för spelet?</label>
-        <InputSelect id="orderByPoints" @bind-Value="_highScoreWins">
-            <option value="true">Få så många poäng som möjligt</option>
-            <option value="false">Få så få poäng som möjligt</option>
-        </InputSelect>
+            <label for="orderByPoints">What is the goal of the game?</label>
+            <select id="orderByPoints" class="form-select" @bind="_highScoreWins">
+                <option value="true">Get as many points as possible</option>
+                <option value="false">Get as few points as possible</option>
+            </select>
 
-        <label for="maxPlayers">Max antal spelare</label>
-        <input id="maxPlayers" type="number" @bind="_maxPlayers" min="1" />
+            <label for="maxPlayers">Max Players</label>
+            <input id="maxPlayers" class="form-input" type="number" @bind="_maxPlayers" min="1" />
 
-        @if (_playerNames.Count >= _maxPlayers)
-        {
-            <p class="create-game-error">Max antal spelare är tillagda!</p>
-        }
-
-        <label for="player">Lägg till spelare</label>
-        <input id="player" @bind="_player" @onkeyup="HandleKey" disabled="@(_playerNames.Count >= _maxPlayers)" />
-        <button type="button" @onclick="AddPlayer" disabled="@(_playerNames.Count >= _maxPlayers)">Lägg till</button>
-
-        <ul>
-            @foreach (var name in _playerNames)
+            @if (_playerNames.Count >= _maxPlayers && _maxPlayers > 0)
             {
-                <li>@name</li>
+                <div class="alert alert-danger">Maximum number of players reached!</div>
             }
-        </ul>
 
-        <label>
-            <input type="checkbox" @bind="_playersLocked" disabled="@(_playerNames.Count <= 0)" />
-            Spärra möjlighet att lägga till fler spelare när matchen startats
-        </label>
+            <label for="player">Add Player</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <input id="player" class="form-input" @bind="_player" @onkeyup="HandleKey"
+                       placeholder="Player name"
+                       disabled="@(_playerNames.Count >= _maxPlayers && _maxPlayers > 0)" />
+                <button type="button" class="btn btn-primary"
+                        @onclick="AddPlayer"
+                        disabled="@(_playerNames.Count >= _maxPlayers && _maxPlayers > 0)">
+                    Add
+                </button>
+            </div>
 
-        <button type="submit" @onclick="CreateNewGame" disabled="@_isCreating">
-            @if (_isCreating)
+            @if (_playerNames.Count > 0)
             {
-                <span class="spinner"></span>
-                <span>Skapar match...</span>
+                <ul class="player-list">
+                    @foreach (var name in _playerNames)
+                    {
+                        <li>@name</li>
+                    }
+                </ul>
             }
-            else
-            {
-                <span>Skapa match</span>
-            }
-        </button>
+
+            <label class="checkbox-label">
+                <input type="checkbox" @bind="_playersLocked" disabled="@(_playerNames.Count <= 0)" />
+                Lock the ability to add more players once the match has started
+            </label>
+
+            <button type="submit" class="btn btn-primary" @onclick="CreateNewGame" disabled="@_isCreating">
+                @if (_isCreating)
+                {
+                    <span class="spinner"></span>
+                    <span>Creating match...</span>
+                }
+                else
+                {
+                    <span>Create Match</span>
+                }
+            </button>
+        </div>
     </div>
 </div>
-
 
 @if (_showErrorPopup)
 {
     <div class="popup-backdrop">
         <div class="popup-box">
-            <h4>Fel</h4>
+            <h4>Error</h4>
             <p>@_errorMessage</p>
-            <button type="button" @onclick="CloseErrorPopup">OK</button>
+            <button type="button" class="btn btn-primary" @onclick="CloseErrorPopup">OK</button>
         </div>
     </div>
 }
@@ -84,20 +99,20 @@
 
     void AddPlayer()
     {
-        if (_playerNames.Count >= _maxPlayers)
+        if (_playerNames.Count >= _maxPlayers && _maxPlayers > 0)
         {
             return;
         }
 
         if (_playerNames.Contains(_player))
         {
-            ShowError("Spelaren finns redan. Ange annat spelarnamn.");
+            ShowError("Player already exists. Enter a different player name.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace((_player)))
         {
-            ShowError("Ange ett spelarnamn");
+            ShowError("Enter a player name");
             return;
         }
 
@@ -121,7 +136,7 @@
     {
         if (string.IsNullOrWhiteSpace(_gameName))
         {
-            ShowError("Ange namn för ditt spel");
+            ShowError("Enter a name for your game");
             return;
         }
 
