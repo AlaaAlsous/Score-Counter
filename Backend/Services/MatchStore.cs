@@ -142,7 +142,13 @@ public class MatchStore
         updated = match.Players.FirstOrDefault(p => p.Id == playerId);
         if (updated == null) return false;
 
+        var oldName = updated.Name;
         updated.Name = newName.Trim();
+
+        var entries = _db.ScoreEntries.Where(e => e.GameMatchId == matchId && e.PlayerId == playerId);
+        foreach (var entry in entries)
+            entry.PlayerName = newName.Trim();
+
         _db.SaveChanges();
         return true;
     }
