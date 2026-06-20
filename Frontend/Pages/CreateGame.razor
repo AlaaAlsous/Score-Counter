@@ -58,16 +58,8 @@
                 Lock the ability to add more players once the match has started
             </label>
 
-            <button type="submit" class="btn btn-primary" @onclick="CreateNewGame" disabled="@_isCreating">
-                @if (_isCreating)
-                {
-                    <span class="spinner"></span>
-                    <span>Creating match...</span>
-                }
-                else
-                {
-                    <span>Create Match</span>
-                }
+            <button type="submit" class="btn btn-primary" @onclick="CreateNewGame">
+                <span>Create Match</span>
             </button>
         </div>
     </div>
@@ -95,7 +87,6 @@
     bool _playersLocked;
     private bool _showErrorPopup = false;
     private string _errorMessage = string.Empty;
-    private bool _isCreating = false;
 
     void AddPlayer()
     {
@@ -140,8 +131,6 @@
             return;
         }
 
-        _isCreating = true;
-
         var game = new MatchRequestDto
         {
             GameName = _gameName,
@@ -153,8 +142,6 @@
         };
 
         var response = await Http.PostAsJsonAsync("api/match", game);
-
-        _isCreating = false;
 
         if (response.IsSuccessStatusCode)
         {

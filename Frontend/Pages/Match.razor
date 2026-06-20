@@ -12,7 +12,10 @@
 
 @if (_isLoading)
 {
-    <p>Loading match info...</p>
+    <div class="loading-spinner-container">
+        <div class="loading-spinner"></div>
+        <p>Loading match info...</p>
+    </div>
 }
 else if (_match is null)
 {
@@ -448,7 +451,6 @@ else
             var operation = delta < 0 ? "decrease" : "increase";
             var amount = Math.Abs(delta);
             var originalScore = player.Score;
-            var originalName = player.Name;
 
             player.Score += delta;
             _statusMessage = $"{player.Name}: {delta:+#;-#} ({player.Score})";

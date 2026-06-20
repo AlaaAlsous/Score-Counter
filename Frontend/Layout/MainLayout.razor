@@ -1,13 +1,37 @@
-﻿@inherits LayoutComponentBase
+﻿@using Frontend.Services
+@implements IDisposable
+@inject LoadingState LoadingState
+
+@inherits LayoutComponentBase
+
+@if (LoadingState.IsLoading)
+{
+    <div class="global-spinner-overlay">
+        <div class="global-spinner"></div>
+        <p class="global-spinner-text">Loading...</p>
+    </div>
+}
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        
         <article class="content px-4">
             @Body
         </article>
     </main>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        LoadingState.OnChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        LoadingState.OnChanged -= StateHasChanged;
+    }
+}
