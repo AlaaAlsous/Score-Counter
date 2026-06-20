@@ -7,35 +7,20 @@
   text-align: center;
 }
 
+.notfound-emoji {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+}
+
 .notfound-title {
-  font-size: 2.5rem;
-  color: #c0392b;
-  margin-bottom: 0.5em;
-  font-weight: bold;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 0.5rem;
 }
 
 .notfound-text {
-  font-size: 1.2rem;
-  color: #555;
-  margin-bottom: 2em;
-}
-
-.return-button {
-  background-color: #3498db;
-  color: #fff;
-  border: none;
-  padding: 0.7em 2em;
-  border-radius: 6px;
   font-size: 1.1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.return-button:hover {
-  background-color: #217dbb;
-}
-
-.notfound-img {
-  width: 180px;
-  margin-bottom: 1.5em;
-  opacity: 0.8;
+  color: var(--gray-500);
+  margin-bottom: 2rem;
 }

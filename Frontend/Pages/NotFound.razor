@@ -1,20 +1,10 @@
-﻿@page "/not-found"
-@layout MainLayout
+﻿@page "/{*url}"
 
-@inject  NavigationManager Nav
-
+    <PageTitle>Page Not Found</PageTitle>
 
 <div class="notfound-container">
-    <img src="/images/404.svg" alt="404" class="notfound-img" />
-    <h3 class="notfound-title">Sidan finns inte</h3>
-    <p class="notfound-text">Sidan du försökte nå existerar inte.</p>
-    <button class="return-button" @onclick="ReturnToHome">Startsida</button>
+    <div class="notfound-emoji">🔍</div>
+    <h1 class="notfound-title">Page Not Found</h1>
+    <p class="notfound-text">The page you are looking for does not exist. Perhaps you used an incorrect match ID.</p>
+    <a href="/" class="btn btn-primary">Back to Home</a>
 </div>
-
-@code {
-
-    private void ReturnToHome()
-    {
-        Nav.NavigateTo("/");
-    }
-}
