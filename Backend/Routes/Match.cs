@@ -114,7 +114,9 @@ public static class MatchEndpoints
 
             if (!store.UpdatePlayerName(id, playerGuid, newName, out var updated))
                 return Results.NotFound("Player not found or name already taken.");
-            await hub.Clients.Group(id).SendAsync("PlayerRenamed", playerGuid, newName.Trim());
+            var trimmedName = newName.Trim();
+            await hub.Clients.Group(id).SendAsync("PlayerRenamed", playerGuid, trimmedName);
+            await hub.Clients.Group(id).SendAsync("ScoreHistoryRenamed", playerGuid, trimmedName);
             return Results.Ok(updated);
         });
 

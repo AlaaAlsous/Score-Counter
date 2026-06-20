@@ -121,7 +121,7 @@ else
                                 <td>
                                     @if (!_match.PlayersLocked && !_match.IsFinished)
                                     {
-                                        <button type="button" class="remove-btn" @onclick="() => RemovePlayer(player)" title="Remove player">✕</button>
+                                        <button type="button" class="remove-btn" @onclick="() => ShowRemoveConfirm(player)" title="Remove player">✕</button>
                                     }
                                 </td>
                             </tr>
@@ -220,6 +220,20 @@ else
     </div>
 }
 
+@if (_showRemoveConfirmPopup && _playerToRemove is not null)
+{
+    <div class="popup-backdrop">
+        <div class="popup-box">
+            <h4>Remove Player</h4>
+            <p>Are you sure you want to remove <strong>@_playerToRemove.Name</strong>? This will also delete all their score history.</p>
+            <div class="actions-row">
+                <button type="button" class="btn btn-danger" @onclick="ConfirmRemovePlayer">Yes, remove</button>
+                <button type="button" class="btn btn-outline" @onclick="CloseRemoveConfirm">No, go back</button>
+            </div>
+        </div>
+    </div>
+}
+
 @if (_showResultsPopup && _match is not null)
 {
     <div class="popup-backdrop">
@@ -288,6 +302,8 @@ else
     private string _errorMessage = string.Empty;
     private string _newPlayerName = string.Empty;
     private string _statusMessage = string.Empty;
+    private bool _showRemoveConfirmPopup;
+    private GamePlayer? _playerToRemove;
     private Dictionary<Guid, int> _customScoreAmounts = new();
     private List<ScoreEntry> _scoreHistory = new();
 
@@ -358,6 +374,13 @@ else
                 player.Name = newName;
                 InvokeAsync(StateHasChanged);
             }
+        });
+
+        _hub.On<Guid, string>("ScoreHistoryRenamed", (playerId, newName) =>
+        {
+            foreach (var entry in _scoreHistory.Where(e => e.PlayerId == playerId))
+                entry.PlayerName = newName;
+            InvokeAsync(StateHasChanged);
         });
 
         _hub.On<GamePlayer>("PlayerAdded", _ =>
@@ -621,14 +644,30 @@ else
         }
     }
 
-    private async Task RemovePlayer(GamePlayer player)
+    private void ShowRemoveConfirm(GamePlayer player)
     {
+        _playerToRemove = player;
+        _showRemoveConfirmPopup = true;
+    }
+
+    private void CloseRemoveConfirm()
+    {
+        _showRemoveConfirmPopup = false;
+        _playerToRemove = null;
+    }
+
+    private async Task ConfirmRemovePlayer()
+    {
+        if (_playerToRemove is null) return;
+        var player = _playerToRemove;
+        _showRemoveConfirmPopup = false;
+        _playerToRemove = null;
+
         var response = await Http.DeleteAsync($"/api/match/{Id}/player/{player.Id}");
 
         if (response.IsSuccessStatusCode)
         {
-            var removedName = player.Name;
-            _statusMessage = $"{removedName}: Player removed.";
+            _statusMessage = $"{player.Name}: Player removed.";
             _ = HideStatusMessage();
             await LoadMatch();
         }
