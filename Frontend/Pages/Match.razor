@@ -9,142 +9,174 @@
 @implements IAsyncDisposable
 
 <PageTitle>Match</PageTitle>
-<div class="match-container">
-    <span class="match-info-label">Matchinformation</span>
 
 @if (_isLoading)
-{ <p>Laddar matchinformation...</p>
+{
+    <p>Loading match info...</p>
 }
 else if (_match is null)
 {
-    <p>Matchen hittades inte.</p>
+    <div class="alert alert-danger">Match not found.</div>
 }
 else
 {
-    <h3 class="match-title">@_match.GameName</h3>
+    <div class="match-page">
+        <div class="match-header">
+            <h2>@_match.GameName</h2>
+            @if (_match.IsFinished)
+            {
+                <span class="badge badge-finished">Finished</span>
+            }
+            else if (_match.PlayersLocked)
+            {
+                <span class="badge badge-locked">Players Locked</span>
+            }
+        </div>
 
-    @if (_match.IsFinished)
-    {
-        <p style="color: red; font-weight: bold;">Matchen är avslutad.</p>
-    }
-
-    <div class="match-info-box">
-        <div class="match-info-row">
-            <div class="match-info-item">
-                <strong>Match-ID:</strong>
-                <span class="match-info-value match-info-id">@_match.Id</span>
-                <button type="button" class="copy-link-btn" @onclick="CopyMatchLink">Kopiera länk</button>
+        <div class="card" style="margin-bottom: 1.25rem;">
+            <div class="card-body">
+                <div class="match-info-content">
+                    <div class="match-info-item">
+                        <strong>Match ID:</strong>
+                        <span class="match-id">@_match.Id</span>
+                        <button type="button" class="copy-link-btn" @onclick="CopyMatchLink">📋 Copy Link</button>
+                    </div>
+                    <div class="match-info-item">
+                        <strong>Rules:</strong>
+                        @(_match.HighScoreWins ? "Highest score wins" : "Lowest score wins")
+                    </div>
+                    <div class="match-info-item">
+                        <strong>Starting Score:</strong> @_match.StartScore
+                    </div>
+                    <div class="match-info-item">
+                        <strong>Created:</strong> @_match.CreatedAt.ToString("g")
+                    </div>
+                </div>
             </div>
-            <div class="match-info-item"><strong>Regler:</strong> <span class="match-info-value">@(_match.HighScoreWins ? "Högsta poäng vinner" : "Lägsta poäng vinner")</span></div>
         </div>
-        <div class="match-info-row">
-            <div class="match-info-item"><strong>Startpoäng:</strong> <span class="match-info-value">@_match.StartScore</span></div>
-            <div class="match-info-item"><strong>Spelare låsta:</strong> <span class="match-info-value">@(_match.PlayersLocked ? "Ja" : "Nej")</span></div>
-            <div class="match-info-item"><strong>Skapad:</strong> <span class="match-info-value">@_match.CreatedAt.ToString("g")</span></div>
-        </div>
-    </div>
 
-    <form class="match-form" onsubmit="return false">
-        <h4>Spelare</h4>
-
-        <p style="margin-bottom: 0.7rem; min-height: 1.5em; color:@StatusMessageColor; visibility: visible;">
+        <div class="status-bar" style="background: @StatusBarBg; color: @StatusBarColor;">
             @(string.IsNullOrWhiteSpace(_statusMessage) ? "" : _statusMessage)
-        </p>
+        </div>
 
+        <div class="section-title">Players</div>
 
         @if (_match.Players.Count == 0)
         {
-            <p>Inga spelare än.</p>
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="empty-state">
+                    <div class="icon">👥</div>
+                    <p>No players yet.</p>
+                </div>
+            </div>
         }
         else
         {
-            <table class="table">
-                <thead>
-                    <tr class="player-header-row">
-                        <th style="grid-column: 1;">Namn &amp; Poäng</th>
-                        <th style="grid-column: 2;">Åtgärder</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var player in Players)
-                    {
-                        <tr @key="player.Id">
-                            <td colspan="3" class="player-row">
-                                <div class="player-info-row">
-                                     <input value="@(_editingPlayerId == player.Id ? _editingName : player.Name)"
-                                         readonly="@_match.IsFinished"
-                                         @oninput="e => StartEditName(player, e.Value?.ToString() ?? string.Empty)"
-                                         @onchange="e => ConfirmEditName(player)" />
-                                    <input type="text"
-                                           value="@player.Score"
-                                           readonly />
-                                </div>
-                                <div class="player-actions-row">
+            <div class="card table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Score</th>
+                            <th>Score Change</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var player in Players)
+                        {
+                            <tr @key="player.Id">
+                                <td>
+                                    <input value="@(_editingPlayerId == player.Id ? _editingName : player.Name)"
+                                           readonly="@_match.IsFinished"
+                                           class="player-name-input"
+                                           @oninput="e => StartEditName(player, e.Value?.ToString() ?? string.Empty)"
+                                           @onchange="e => ConfirmEditName(player)" />
+                                </td>
+                                <td><span class="score-display">@player.Score</span></td>
+                                <td>
                                     @if (!_match.IsFinished)
                                     {
-                                        <button type="button" @onclick="() => ChangeScore(player, -1)">-1</button>
-                                        <button type="button" @onclick="() => ChangeScore(player, -5)">-5</button>
-                                        <button type="button" @onclick="() => ChangeScore(player, 1)">+1</button>
-                                        <button type="button" @onclick="() => ChangeScore(player, 5)">+5</button>
+                                        <div class="score-actions">
+                                            <button class="score-btn score-btn-minus" @onclick="() => ChangeScore(player, -1)">-1</button>
+                                            <button class="score-btn score-btn-minus" @onclick="() => ChangeScore(player, -5)">-5</button>
+                                            <button class="score-btn score-btn-plus" @onclick="() => ChangeScore(player, 1)">+1</button>
+                                            <button class="score-btn score-btn-plus" @onclick="() => ChangeScore(player, 5)">+5</button>
+                                            <span class="custom-score-group">
+                                                <input type="number"
+                                                       class="custom-score-input"
+                                                       value="@GetCustomAmount(player.Id)"
+                                                       @oninput="e => SetCustomAmount(player.Id, e.Value?.ToString())"
+                                                       placeholder="?"
+                                                       min="0" />
+                                                <button class="score-btn score-btn-minus" @onclick="() => HandleCustomScore(player, false)">-</button>
+                                                <button class="score-btn score-btn-plus" @onclick="() => HandleCustomScore(player, true)">+</button>
+                                            </span>
+                                        </div>
                                     }
+                                </td>
+                                <td>
                                     @if (!_match.PlayersLocked && !_match.IsFinished)
                                     {
-                                        <button type="button" class="remove-player-btn" @onclick="() => RemovePlayer(player)">Ta bort</button>
+                                        <button type="button" class="remove-btn" @onclick="() => RemovePlayer(player)" title="Remove player">✕</button>
                                     }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
 
         @if (!_match.PlayersLocked && !_match.IsFinished)
         {
-            <h4>Lägg till spelare</h4>
-            <input @bind="_newPlayerName" @onkeyup="HandleKey" placeholder="Spelarnamn" />
-            <button type="button" @onclick="AddPlayer">Lägg till</button>
+            <div class="card add-player-card">
+                <div class="card-body">
+                    <div class="section-title" style="margin-bottom: 0.75rem;">Add Player</div>
+                    <div class="add-player-row">
+                        <input class="form-input" @bind="_newPlayerName" @onkeyup="HandleKey" placeholder="Player name" />
+                        <button type="button" class="btn btn-primary" @onclick="AddPlayer">Add</button>
+                    </div>
+                </div>
+            </div>
         }
 
-        <hr />
-
-        <div class="match-action-row">
+        <div class="actions-row">
             @if (!_match.IsFinished)
             {
-                <button type="button" @onclick="ShowFinishConfirm" class="match-action-btn">Avsluta match</button>
+                <button type="button" class="btn btn-danger" @onclick="ShowFinishConfirm">🏁 End Match</button>
             }
             else
             {
-                <button type="button" @onclick="ShowResults" class="match-action-btn">Visa slutresultat</button>
+                <button type="button" class="btn btn-primary" @onclick="ShowResults">🏆 Show Results</button>
             }
 
-            <button type="button" @onclick="ResetMatch" class="match-action-btn">Återställ match</button>
-            <button type="button" @onclick="CloneMatch" class="match-action-btn">Klona match</button>
+            <button type="button" class="btn btn-outline" @onclick="ResetMatch">🔄 Reset Match</button>
+            <button type="button" class="btn btn-outline" @onclick="CloneMatch">📋 Clone Match</button>
         </div>
-    </form>
+    </div>
 }
 
 @if (_showErrorPopup)
 {
     <div class="popup-backdrop">
         <div class="popup-box">
-            <h4>Fel</h4>
+            <h4>Error</h4>
             <p>@_errorMessage</p>
-            <button type="button" @onclick="CloseErrorPopup">OK</button>
+            <button type="button" class="btn btn-primary" @onclick="CloseErrorPopup">OK</button>
         </div>
     </div>
 }
-</div>
 
 @if (_showFinishConfirmPopup)
 {
     <div class="popup-backdrop">
         <div class="popup-box">
-            <h4>Avsluta match</h4>
-            <p>Är du säker på att du vill avsluta matchen? Inga ändringar kan göras efter avslutad match.</p>
-            <div class="match-action-row">
-                <button type="button" class="match-action-btn" @onclick="FinishMatch">Ja, avsluta</button>
-                <button type="button" class="match-action-btn" @onclick="CloseFinishConfirm">Nej, tillbaka</button>
+            <h4>End Match</h4>
+            <p>Are you sure you want to end the match? No changes can be made after the match is ended.</p>
+            <div class="actions-row">
+                <button type="button" class="btn btn-danger" @onclick="FinishMatch">Yes, end</button>
+                <button type="button" class="btn btn-outline" @onclick="CloseFinishConfirm">No, go back</button>
             </div>
         </div>
     </div>
@@ -153,29 +185,27 @@ else
 @if (_showResultsPopup && _match is not null)
 {
     <div class="popup-backdrop">
-        <div class="popup-box results-popup">
-            <h3>Slutresultat</h3>
+        <div class="popup-box results-popup" style="max-width: 560px;">
+            <h3>🏆 Final Results</h3>
 
-            <p>
-                <strong>Match:</strong> @_match.GameName
-            </p>
+            <p><strong>Match:</strong> @_match.GameName</p>
 
             @if (SortedPlayers.Any())
             {
                 var winner = SortedPlayers.First();
 
                 <div class="winner-box">
-                    <h4>Vinnare</h4>
+                    <h4>Winner</h4>
                     <p class="winner-name">@winner.Name</p>
-                    <p>@winner.Score poäng</p>
+                    <p>@winner.Score points</p>
                 </div>
 
-                <table class="table">
+                <table>
                     <thead>
                         <tr>
-                            <th>Placering</th>
-                            <th>Namn</th>
-                            <th>Poäng</th>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Score</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -187,7 +217,7 @@ else
                             <tr>
                                 <td>@placement</td>
                                 <td>@player.Name</td>
-                                <td>@player.Score</td>
+                                <td style="text-align: center; font-weight: 700;">@player.Score</td>
                             </tr>
                             placement++;
                         }
@@ -196,13 +226,13 @@ else
             }
             else
             {
-                <p>Det finns inga spelare att visa.</p>
+                <p>There are no players to display.</p>
             }
 
-            <div class="match-action-row">
-                <button type="button" class="match-action-btn" @onclick="CloseResults">Stäng</button>
-                <button type="button" class="match-action-btn" @onclick="ResetMatch">Ny match från start</button>
-                <button type="button" class="match-action-btn" @onclick="CloneMatch">Klona match</button>
+            <div class="actions-row" style="margin-top: 1.5rem;">
+                <button type="button" class="btn btn-outline" @onclick="CloseResults">Close</button>
+                <button type="button" class="btn btn-outline" @onclick="ResetMatch">🔄 New Match from Start</button>
+                <button type="button" class="btn btn-outline" @onclick="CloneMatch">📋 Clone Match</button>
             </div>
         </div>
     </div>
@@ -220,18 +250,43 @@ else
     private string _errorMessage = string.Empty;
     private string _newPlayerName = string.Empty;
     private string _statusMessage = string.Empty;
+    private Dictionary<Guid, int> _customScoreAmounts = new();
+
+    private int? GetCustomAmount(Guid playerId) =>
+        _customScoreAmounts.TryGetValue(playerId, out var val) ? val : null;
+
+    private void SetCustomAmount(Guid playerId, string? value)
+    {
+        if (int.TryParse(value, out var parsed) && parsed >= 1)
+            _customScoreAmounts[playerId] = parsed;
+        else if (string.IsNullOrWhiteSpace(value))
+            _customScoreAmounts.Remove(playerId);
+    }
+
+    private void HandleCustomScore(GamePlayer player, bool increase)
+    {
+        var amount = GetCustomAmount(player.Id);
+        if (amount is null)
+        {
+            ShowError("Enter a custom score amount first.");
+            return;
+        }
+
+        var delta = increase ? amount.Value : -amount.Value;
+        _ = ChangeScore(player, delta);
+    }
 
     private HubConnection? _hub;
 
     private IEnumerable<GamePlayer> Players =>
-    _match?.Players ?? Enumerable.Empty<GamePlayer>();
+        _match?.Players ?? Enumerable.Empty<GamePlayer>();
 
     private IEnumerable<GamePlayer> SortedPlayers =>
-    _match is null
-        ? Enumerable.Empty<GamePlayer>()
-        : _match.HighScoreWins
-            ? _match.Players.OrderByDescending(p => p.Score)
-            : _match.Players.OrderBy(p => p.Score);
+        _match is null
+            ? Enumerable.Empty<GamePlayer>()
+            : _match.HighScoreWins
+                ? _match.Players.OrderByDescending(p => p.Score)
+                : _match.Players.OrderBy(p => p.Score);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -252,7 +307,7 @@ else
             if (player is not null)
             {
                 player.Score = newScore;
-                _statusMessage = $"{player.Name}: Poängen uppdaterades.";
+                _statusMessage = $"{player.Name}: Score updated.";
                 _ = HideStatusMessage();
                 InvokeAsync(StateHasChanged);
             }
@@ -314,17 +369,17 @@ else
 
             if (_match is null)
             {
-                ShowError("Matchen kunde inte laddas.");
+                ShowError("Could not load the match.");
             }
         }
         catch
         {
-            ShowError("Kunde inte hämta matchen.");
+            ShowError("Could not fetch the match.");
         }
         finally
         {
             _isLoading = false;
-            StateHasChanged(); 
+            StateHasChanged();
         }
     }
 
@@ -344,8 +399,13 @@ else
 
         if (!response.IsSuccessStatusCode)
         {
-            ShowError("Poängen gick inte att ändra");
+            ShowError("Could not change the score");
             return;
+        }
+
+        if (_customScoreAmounts.Remove(player.Id))
+        {
+            StateHasChanged();
         }
     }
 
@@ -400,7 +460,7 @@ else
         var originalName = player.Name;
         if (string.IsNullOrWhiteSpace(newName))
         {
-            ShowError("Spelarnamnet får inte vara tomt.");
+            ShowError("Player name cannot be empty.");
             _editingName = originalName;
             StateHasChanged();
             return;
@@ -410,7 +470,7 @@ else
         if (response.IsSuccessStatusCode)
         {
             player.Name = newName.Trim();
-            _statusMessage = $@"{player.Name}: Namnet uppdaterades.";
+            _statusMessage = $"{player.Name}: Name updated.";
             _editingPlayerId = null;
             _editingName = string.Empty;
             _ = HideStatusMessage();
@@ -427,7 +487,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(_newPlayerName))
         {
-            ShowError("Ange ett spelarnamn.");
+            ShowError("Enter a player name.");
             return;
         }
 
@@ -436,7 +496,7 @@ else
 
         if (response.IsSuccessStatusCode)
         {
-            _statusMessage = $@"{addedName}: Spelaren lades till.";
+            _statusMessage = $"{addedName}: Player added.";
             _newPlayerName = string.Empty;
             _ = HideStatusMessage();
             await LoadMatch();
@@ -454,7 +514,7 @@ else
         if (response.IsSuccessStatusCode)
         {
             var removedName = player.Name;
-            _statusMessage = $@"{removedName}: Spelaren togs bort.";
+            _statusMessage = $"{removedName}: Player removed.";
             _ = HideStatusMessage();
             await LoadMatch();
         }
@@ -478,7 +538,7 @@ else
             }
             else
             {
-                ShowError("Kunde inte skapa en återställd match.");
+                ShowError("Could not create a reset match.");
             }
         }
         else
@@ -501,7 +561,7 @@ else
             }
             else
             {
-                ShowError("Kunde inte öppna den klonade matchen.");
+                ShowError("Could not open the cloned match.");
             }
         }
         else
@@ -540,34 +600,37 @@ else
 
             if (success)
             {
-                _statusMessage = "Match Länken kopierades.";
+                _statusMessage = "Match link copied.";
                 _ = HideStatusMessage();
             }
             else
             {
-                ShowError("Kunde inte kopiera länken.");
+                ShowError("Could not copy the link.");
             }
         }
         catch
         {
-            ShowError("Kunde inte kopiera länken.");
+            ShowError("Could not copy the link.");
         }
     }
-        private string StatusMessageColor
+
+    private string StatusBarColor => _statusMessage switch
     {
-        get
-        {
-            if (_statusMessage.Contains("togs bort"))
-                return "red";
-            if (_statusMessage.Contains("lades till"))
-                return "green";
-            if (_statusMessage.Contains("kopierades"))
-                return "orange";
-            if (_statusMessage.Contains("Namnet uppdaterades"))
-                return "blue";
-            if (_statusMessage.Contains("Poängen uppdaterades"))
-                return "purple";
-            return "#1f1f1f"; 
-        }
-    }
+        var m when m.Contains("removed") => "#991b1b",
+        var m when m.Contains("added") => "#065f46",
+        var m when m.Contains("copied") => "#92400e",
+        var m when m.Contains("Name updated") => "#3730a3",
+        var m when m.Contains("Score updated") => "#6b21a8",
+        _ => "var(--dark)"
+    };
+
+    private string StatusBarBg => _statusMessage switch
+    {
+        var m when m.Contains("removed") => "var(--danger-bg)",
+        var m when m.Contains("added") => "var(--success-bg)",
+        var m when m.Contains("copied") => "#fef3c7",
+        var m when m.Contains("Name updated") => "var(--primary-light)",
+        var m when m.Contains("Score updated") => "#f3e8ff",
+        _ => "transparent"
+    };
 }
