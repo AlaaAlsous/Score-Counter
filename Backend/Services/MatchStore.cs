@@ -115,10 +115,16 @@ public class MatchStore
         return true;
     }
 
-    public bool RemovePlayer(string matchId, Guid playerId, out GamePlayer? removed)
+    public bool RemovePlayer(string matchId, Guid playerId, out GamePlayer? removed, out string playerName)
     {
+        playerName = string.Empty;
         removed = _db.Players.FirstOrDefault(p => p.Id == playerId && p.GameMatchId == matchId);
         if (removed == null) return false;
+
+        playerName = removed.Name;
+
+        var historyEntries = _db.ScoreEntries.Where(e => e.GameMatchId == matchId && e.PlayerId == playerId);
+        _db.ScoreEntries.RemoveRange(historyEntries);
 
         _db.Players.Remove(removed);
         _db.SaveChanges();
@@ -151,18 +157,45 @@ public class MatchStore
         return true;
     }
 
-    public bool UpdatePlayerScore(string matchId, Guid playerId, int? newScore, int? amount, string? operation, out GamePlayer? updated)
+    public bool UpdatePlayerScore(string matchId, Guid playerId, int? newScore, int? amount, string? operation, out GamePlayer? updated, out ScoreEntry? entry)
     {
+        entry = null;
         updated = _db.Players.FirstOrDefault(p => p.Id == playerId && p.GameMatchId == matchId);
         if (updated == null) return false;
+
+        var scoreBefore = updated.Score;
 
         if (newScore.HasValue)
             updated.Score = newScore.Value;
         else if (amount.HasValue && !string.IsNullOrWhiteSpace(operation))
             updated.Score += operation == "decrease" ? -amount.Value : amount.Value;
 
+        var delta = updated.Score - scoreBefore;
+        if (delta != 0)
+        {
+            entry = new ScoreEntry
+            {
+                GameMatchId = matchId,
+                PlayerId = playerId,
+                PlayerName = updated.Name,
+                ScoreBefore = scoreBefore,
+                ScoreAfter = updated.Score,
+                Delta = delta,
+                Timestamp = DateTime.UtcNow
+            };
+            _db.ScoreEntries.Add(entry);
+        }
+
         _db.SaveChanges();
         return true;
+    }
+
+    public List<ScoreEntry> GetScoreHistory(string matchId)
+    {
+        return _db.ScoreEntries
+            .Where(e => e.GameMatchId == matchId)
+            .OrderByDescending(e => e.Timestamp)
+            .ToList();
     }
 
     public bool CheckNameForUniqueness(string matchId, string newName, string playerId)

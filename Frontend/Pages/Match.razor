@@ -131,6 +131,41 @@ else
             </div>
         }
 
+        @if (_scoreHistory.Count > 0)
+        {
+            <div class="section-title">Score History</div>
+            <div class="history-by-player">
+                @foreach (var group in HistoryByPlayer)
+                {
+                    <div class="card player-history-card">
+                        <div class="player-history-header">
+                            <span class="player-history-name">@group.Key</span>
+                            <span class="player-history-current">Current: @group.First().ScoreAfter</span>
+                        </div>
+                        <table class="player-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Change</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var entry in group)
+                                {
+                                    <tr class="@(entry.Delta > 0 ? "history-plus" : "history-minus")">
+                                        <td class="history-time">@entry.Timestamp.ToLocalTime().ToString("HH:mm:ss")</td>
+                                        <td class="history-delta">@(entry.Delta > 0 ? "+" : "")@entry.Delta</td>
+                                        <td class="history-score">@entry.ScoreBefore → @entry.ScoreAfter</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
         @if (!_match.PlayersLocked && !_match.IsFinished)
         {
             <div class="card add-player-card">
@@ -254,6 +289,12 @@ else
     private string _newPlayerName = string.Empty;
     private string _statusMessage = string.Empty;
     private Dictionary<Guid, int> _customScoreAmounts = new();
+    private List<ScoreEntry> _scoreHistory = new();
+
+    private IEnumerable<IGrouping<string, ScoreEntry>> HistoryByPlayer =>
+        _scoreHistory
+            .GroupBy(e => e.PlayerName)
+            .OrderBy(g => g.Key);
 
     private int? GetCustomAmount(Guid playerId) =>
         _customScoreAmounts.TryGetValue(playerId, out var val) ? val : null;
@@ -330,12 +371,23 @@ else
 
         _hub.On<string>("MatchReset", newUrl =>
             InvokeAsync(() => Nav.NavigateTo(newUrl)));
+
+        _hub.On<ScoreEntry>("ScoreHistoryEntry", entry =>
+        {
+            _scoreHistory.Insert(0, entry);
+            InvokeAsync(StateHasChanged);
+        });
+
+        _hub.On<string>("PlayerHistoryRemoved", playerName =>
+        {
+            _scoreHistory.RemoveAll(e => e.PlayerName == playerName);
+            InvokeAsync(StateHasChanged);
+        });
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await EnsureHubConnection();
-        RegisterHubHandlers();
+        await ConnectAndJoin();
         await LoadMatch();
     }
 
@@ -343,18 +395,23 @@ else
     {
         if (Id != _currentHubMatchId)
         {
-            await JoinCurrentMatch();
+            await ConnectAndJoin();
             await LoadMatch();
         }
     }
 
-    private async Task EnsureHubConnection()
+    private async Task ConnectAndJoin()
     {
-        if (_hub is not null && _hub.State == HubConnectionState.Connected)
-            return;
-
         if (_hub is not null)
         {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(_currentHubMatchId) && _hub.State == HubConnectionState.Connected)
+                {
+                    await _hub.SendAsync("LeaveMatch", _currentHubMatchId);
+                }
+            }
+            catch { }
             await _hub.DisposeAsync();
         }
 
@@ -362,25 +419,10 @@ else
             .WithUrl(Nav.ToAbsoluteUri("/matchevents"))
             .WithAutomaticReconnect()
             .Build();
-    }
 
-    private async Task JoinCurrentMatch()
-    {
-        await EnsureHubConnection();
+        RegisterHubHandlers();
 
-        if (_hub is null)
-            return;
-
-        if (!string.IsNullOrWhiteSpace(_currentHubMatchId) && _hub.State == HubConnectionState.Connected)
-        {
-            await _hub.SendAsync("LeaveMatch", _currentHubMatchId);
-        }
-
-        if (_hub.State != HubConnectionState.Connected)
-        {
-            await _hub.StartAsync();
-        }
-
+        await _hub.StartAsync();
         await _hub.SendAsync("JoinMatch", Id);
         _currentHubMatchId = Id;
     }
@@ -420,6 +462,7 @@ else
             _showFinishConfirmPopup = false;
 
             _match = await Http.GetFromJsonAsync<GameMatch>($"/api/match/{Id}");
+            _scoreHistory = await Http.GetFromJsonAsync<List<ScoreEntry>>($"/api/match/{Id}/history") ?? new();
 
             if (_match is null)
             {

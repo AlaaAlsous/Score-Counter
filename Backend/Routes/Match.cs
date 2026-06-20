@@ -94,9 +94,11 @@ public static class MatchEndpoints
             if (!store.TryGetMatch(id, out var match)) return Results.NotFound("Match not found.");
             if (match!.IsFinished) return Results.BadRequest("Match is finished and cannot be modified.");
 
-            if (!store.UpdatePlayerScore(id, playerGuid, newScore, amount, operation, out var updated))
+            if (!store.UpdatePlayerScore(id, playerGuid, newScore, amount, operation, out var updated, out var entry))
                 return Results.NotFound("Player not found in match.");
             await hub.Clients.Group(id).SendAsync("ScoreChanged", playerGuid, updated!.Score);
+            if (entry is not null)
+                await hub.Clients.Group(id).SendAsync("ScoreHistoryEntry", entry);
             return Results.Ok(updated);
         });
 
@@ -124,10 +126,22 @@ public static class MatchEndpoints
             if (!store.TryGetMatch(id, out var match)) return Results.NotFound("Match not found.");
             if (match!.IsFinished) return Results.BadRequest("Match is finished and cannot be modified.");
 
-            if (!store.RemovePlayer(id, playerGuid, out var removed))
+            if (!store.RemovePlayer(id, playerGuid, out var removed, out var playerName))
                 return Results.NotFound("Player not found in match.");
             await hub.Clients.Group(id).SendAsync("PlayerRemoved", playerId);
+            await hub.Clients.Group(id).SendAsync("PlayerHistoryRemoved", playerName);
             return Results.Ok(removed);
+        });
+
+        app.MapGet("/api/match/{id}/history", (string id, MatchStore store) =>
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return Results.BadRequest("Match ID is required.");
+            if (!store.TryGetMatch(id, out _))
+                return Results.NotFound("Match not found.");
+
+            var history = store.GetScoreHistory(id);
+            return Results.Ok(history);
         });
 
         app.MapPost("/api/match/{id}/finish", async (string id, MatchStore store, IHubContext<MatchEventHub> hub) =>
