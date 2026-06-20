@@ -1,39 +1,57 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Poängräknaren</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
+﻿@inject IJSRuntime JS
+
+<div class="top-row">
+    <a class="navbar-brand" href="">Score Counter</a>
+    <button title="Menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+        ☰
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/">
+                🏠 Home
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/match-enter">
+                🎮 Go to Match
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link" href="/about">
+                ℹ️ About
+            </NavLink>
+        </div>
+    </nav>
+    <div class="theme-toggle-wrapper">
+        <button title="Toggle theme" class="theme-toggle" @onclick="ToggleTheme">
+            @(_isDark ? "☀️" : "🌙")
         </button>
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-                <NavLink class="nav-link" href="/">
-                    <span class="bi bi-plus-square-fill" aria-hidden="true"></span> Skapa match
-                </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/match-enter">
-                <span class="bi bi-dice-5" aria-hidden="true"></span> Match
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-                <NavLink class="nav-link" href="/about">
-                    <span class="bi bi-flower2" aria-hidden="true"></span> Om sidan
-                </NavLink>
-        </div>
-    </nav>
-</div>
-
 @code {
     private bool collapseNavMenu = true;
+    private bool _isDark = false;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => collapseNavMenu ? "nav-collapsed" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var theme = await JS.InvokeAsync<string>("getCurrentTheme");
+        _isDark = theme == "dark";
+    }
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task ToggleTheme()
+    {
+        await JS.InvokeVoidAsync("toggleTheme");
+        _isDark = !_isDark;
     }
 }
