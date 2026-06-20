@@ -1,57 +1,44 @@
 @page "/match-enter"
 @inject NavigationManager NavManager
 
-<div class="match-enter-container">
-    <h3>Gå till match</h3>
-    <label for="matchInput">Ange match-id eller länk:</label>
-    <input id="matchInput" @bind="matchInput" @onkeydown="HandleMatchInputKey" autofocus />
-    <button @onclick="GoToMatch">Gå till match</button>
-    @if (!string.IsNullOrEmpty(matchError))
-    {
-        <div class="match-dialog-error">@matchError</div>
-    }
+    <PageTitle>Go to Match</PageTitle>
+
+<div class="card match-enter-card">
+    <div class="card-header">
+        <h3>🎮 Go to Match</h3>
+    </div>
+    <div class="card-body">
+        <label for="matchId">Match ID</label>
+        <input id="matchId" class="form-input" @bind="_matchId" @onkeyup="HandleKey"
+               placeholder="Enter match ID (e.g. AbC123)" />
+
+        <button class="btn btn-primary" @onclick="GoToMatch">Go to Match</button>
+
+        @if (_showError)
+        {
+            <div class="alert alert-danger">@_errorMessage</div>
+        }
+    </div>
 </div>
 
 @code {
-    private string matchInput = string.Empty;
-    private string matchError = string.Empty;
+    private string _matchId = string.Empty;
+    private bool _showError;
+    private string _errorMessage = string.Empty;
 
     private void GoToMatch()
     {
-        var trimmed = matchInput.Trim();
-        if (string.IsNullOrEmpty(trimmed))
+        if (string.IsNullOrWhiteSpace(_matchId))
         {
-            matchError = "Du måste ange ett match-id eller länk.";
+            _showError = true;
+            _errorMessage = "Enter a match ID.";
             return;
         }
 
-        string? id = null;
-        if (trimmed.StartsWith("/match/"))
-            id = trimmed[7..];
-        else if (trimmed.StartsWith("http://") || trimmed.StartsWith("https://"))
-        {
-            var uri = new Uri(trimmed);
-            if (uri.AbsolutePath.StartsWith("/match/"))
-                id = uri.AbsolutePath[7..];
-        }
-        else if (trimmed.StartsWith("match/"))
-            id = trimmed[6..];
-        else if (trimmed.All(c => char.IsLetterOrDigit(c)))
-            id = trimmed;
-        else
-            id = null;
-
-        if (!string.IsNullOrEmpty(id) && id.All(char.IsLetterOrDigit))
-        {
-            NavManager.NavigateTo($"/match/{id}");
-        }
-        else
-        {
-            matchError = "Ogiltigt match-id eller länk.";
-        }
+        NavManager.NavigateTo($"/match/{_matchId.Trim()}");
     }
 
-    private void HandleMatchInputKey(KeyboardEventArgs e)
+    private void HandleKey(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
