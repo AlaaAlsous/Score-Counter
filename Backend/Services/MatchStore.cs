@@ -138,12 +138,13 @@ public class MatchStore
         var match = _db.Matches.Include(m => m.Players).FirstOrDefault(m => m.Id == matchId);
         if (match == null) return false;
         if (match.IsFinished) return false;
-        if (match.Players.Any(p => p.Name.Equals(newName, StringComparison.OrdinalIgnoreCase))) return false;
 
         updated = match.Players.FirstOrDefault(p => p.Id == playerId);
         if (updated == null) return false;
 
-        var oldName = updated.Name;
+        if (match.Players.Any(p => p.Id != playerId && p.Name.Equals(newName, StringComparison.OrdinalIgnoreCase)))
+            return false;
+
         updated.Name = newName.Trim();
 
         var entries = _db.ScoreEntries.Where(e => e.GameMatchId == matchId && e.PlayerId == playerId);

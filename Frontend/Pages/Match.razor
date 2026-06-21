@@ -6,6 +6,7 @@
 @inject IJSRuntime JS
 
 @using Microsoft.AspNetCore.SignalR.Client
+@using QRCoder
 @implements IAsyncDisposable
 
 <PageTitle>Match</PageTitle>
@@ -42,7 +43,8 @@ else
                     <div class="match-info-item">
                         <strong>Match ID:</strong>
                         <span class="match-id">@_match.Id</span>
-                        <button type="button" class="copy-link-btn" @onclick="CopyMatchLink">📋 Copy Link</button>
+                        <button type="button" class="copy-link-btn" @onclick="CopyMatchLink">Copy Link</button>
+                        <button type="button" class="copy-link-btn" @onclick="ShowQrCode" style="margin-left: 0.3rem;">QR Code</button>
                     </div>
                     <div class="match-info-item">
                         <strong>Rules:</strong>
@@ -226,6 +228,26 @@ else
     </div>
 }
 
+@if (_showQrPopup)
+{
+    <div class="popup-backdrop" @onclick="CloseQrPopup">
+        <div class="popup-box" style="max-width: 300px; text-align: center; padding: 1.5rem;" @onclick:stopPropagation="true">
+            <h4 style="margin-bottom: 0.4rem;">Share Match</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">Scan the QR code to join this match</p>
+            <div style="display: flex; justify-content: center; margin-bottom: 0.5rem; max-width: 200px; margin-left: auto; margin-right: auto;">
+                @if (!string.IsNullOrWhiteSpace(_qrCodeSvg))
+                {
+                    @((MarkupString)_qrCodeSvg)
+                }
+            </div>
+            <div style="margin-bottom: 0.5rem;">
+                <span class="match-id" style="font-size: 0.8rem;">@_match?.Id</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" @onclick="CloseQrPopup" style="margin-left: 0.5rem;">Close</button>
+        </div>
+    </div>
+}
+
 @if (_showRemoveConfirmPopup && _playerToRemove is not null)
 {
     <div class="popup-backdrop">
@@ -327,6 +349,8 @@ else
     private string _statusMessage = string.Empty;
     private bool _showRemoveConfirmPopup;
     private GamePlayer? _playerToRemove;
+    private bool _showQrPopup;
+    private string _qrCodeSvg = string.Empty;
     private Dictionary<Guid, int> _customScoreAmounts = new();
     private List<ScoreEntry> _scoreHistory = new();
 
@@ -788,6 +812,24 @@ else
         {
             ShowError("Could not copy the link.");
         }
+    }
+
+    private void ShowQrCode()
+    {
+        var absoluteUrl = Nav.ToAbsoluteUri($"/match/{Id}").ToString();
+        
+        using var qrGenerator = new QRCodeGenerator();
+        using var qrCodeData = qrGenerator.CreateQrCode(absoluteUrl, QRCodeGenerator.ECCLevel.M);
+        var svgQrCode = new SvgQRCode(qrCodeData);
+        _qrCodeSvg = svgQrCode.GetGraphic(10, "#1e293b", "#ffffff", false);
+        
+        _showQrPopup = true;
+    }
+
+    private void CloseQrPopup()
+    {
+        _showQrPopup = false;
+        _qrCodeSvg = string.Empty;
     }
 
     private string StatusBarColor => _statusMessage switch
