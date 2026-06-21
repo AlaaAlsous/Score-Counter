@@ -7,5 +7,6 @@ public class MatchRequestDto
     public int MaxPlayers { get; set; } = 4;
     public bool PlayersLocked { get; set; } = false;
     public int StartScore { get; set; } = 0;
+    public int? MaxScore { get; set; }
     public List<string>? PlayerNames { get; set; }
 }

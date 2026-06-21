@@ -39,6 +39,7 @@ public static class MatchEndpoints
                 MaxPlayers = match.MaxPlayers,
                 PlayersLocked = match.PlayersLocked,
                 StartScore = match.StartScore,
+                MaxScore = match.MaxScore,
                 PlayerNames = match.OriginalPlayerNames.ToList()
             };
             var newMatch = store.CreateMatch(resetRequest);
@@ -61,6 +62,7 @@ public static class MatchEndpoints
                 MaxPlayers = match.MaxPlayers,
                 PlayersLocked = match.PlayersLocked,
                 StartScore = match.StartScore,
+                MaxScore = match.MaxScore,
                 PlayerNames = match.Players.Select(p => p.Name).ToList()
             };
             var clonedMatch = store.CreateMatch(cloneRequest);

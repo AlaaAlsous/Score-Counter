@@ -42,6 +42,7 @@ public class MatchStore
             MaxPlayers = request.MaxPlayers,
             PlayersLocked = request.PlayersLocked,
             StartScore = request.StartScore,
+            MaxScore = request.MaxScore,
 
             OriginalPlayerNames = playerNames.ToList(),
             Players = playerNames

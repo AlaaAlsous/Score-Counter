@@ -17,6 +17,9 @@
             <label for="startScore">Starting Score</label>
             <input id="startScore" class="form-input" type="number" @bind="_startScore" />
 
+            <label for="maxScore">Max Score (optional)</label>
+            <input id="maxScore" class="form-input" type="number" @bind="_maxScore" min="0" placeholder="Leave empty for no limit" />
+
             <label for="orderByPoints">What is the goal of the game?</label>
             <select id="orderByPoints" class="form-select" value="@_highScoreWins.ToString().ToLower()"
                     @onchange="e => _highScoreWins = bool.TryParse(e.Value?.ToString(), out var val) && val">
@@ -87,6 +90,7 @@
     readonly List<string> _playerNames = [];
     int _maxPlayers = 4;
     bool _playersLocked;
+    int? _maxScore;
     private bool _showErrorPopup = false;
     private string _errorMessage = string.Empty;
 
@@ -164,6 +168,7 @@
             MaxPlayers = _maxPlayers,
             PlayersLocked = _playersLocked,
             StartScore = _startScore,
+            MaxScore = _maxScore,
             PlayerNames = _playerNames
         };
 

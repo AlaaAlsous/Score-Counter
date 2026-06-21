@@ -51,6 +51,12 @@ else
                     <div class="match-info-item">
                         <strong>Starting Score:</strong> @_match.StartScore
                     </div>
+                    @if (_match.MaxScore.HasValue)
+                    {
+                        <div class="match-info-item">
+                            <strong>Target Score:</strong> @_match.MaxScore.Value
+                        </div>
+                    }
                     <div class="match-info-item">
                         <strong>Created:</strong> @_match.CreatedAt.ToString("g")
                     </div>
@@ -244,12 +250,24 @@ else
 
             @if (SortedPlayers.Any())
             {
-                var winner = SortedPlayers.First();
+                var bestScore = SortedPlayers.First().Score;
+                var winners = SortedPlayers.TakeWhile(p => p.Score == bestScore).ToList();
 
                 <div class="winner-box">
-                    <h4>Winner</h4>
-                    <p class="winner-name">@winner.Name</p>
-                    <p>@winner.Score points</p>
+                    @if (winners.Count > 1)
+                    {
+                        <h4>🏆 Draw</h4>
+                        <p class="winner-name">
+                            @string.Join(" & ", winners.Select(w => w.Name))
+                        </p>
+                        <p>@bestScore points each</p>
+                    }
+                    else
+                    {
+                        <h4>Winner</h4>
+                        <p class="winner-name">@winners[0].Name</p>
+                        <p>@bestScore points</p>
+                    }
                 </div>
 
                 <table>
@@ -263,15 +281,20 @@ else
                     <tbody>
                         @{
                             var placement = 1;
+                            var prevScore = (int?)null;
                         }
                         @foreach (var player in SortedPlayers)
                         {
+                            if (prevScore is not null && player.Score != prevScore)
+                            {
+                                placement = placement + 1 + SortedPlayers.Count(p => p.Score == prevScore) - 1;
+                            }
                             <tr>
                                 <td>@placement</td>
                                 <td>@player.Name</td>
                                 <td style="text-align: center; font-weight: 700;">@player.Score</td>
                             </tr>
-                            placement++;
+                            prevScore = player.Score;
                         }
                     </tbody>
                 </table>
