@@ -25,7 +25,8 @@
             </select>
 
             <label for="maxPlayers">Max Players</label>
-            <input id="maxPlayers" class="form-input" type="number" @bind="_maxPlayers" min="1" />
+            <input id="maxPlayers" class="form-input" type="number" 
+                   @bind="MaxPlayers" min="1" />
 
             @if (_playerNames.Count >= _maxPlayers && _maxPlayers > 0)
             {
@@ -89,6 +90,24 @@
     private bool _showErrorPopup = false;
     private string _errorMessage = string.Empty;
 
+    private int MaxPlayers
+    {
+        get => _maxPlayers;
+        set
+        {
+            var minimum = Math.Max(1, _playerNames.Count);
+            if (value < minimum)
+            {
+                _maxPlayers = minimum;
+                ShowError($"Cannot set Max Players below {minimum}. You already have {_playerNames.Count} player(s) added.");
+            }
+            else
+            {
+                _maxPlayers = value;
+            }
+        }
+    }
+
     void AddPlayer()
     {
         if (_playerNames.Count >= _maxPlayers && _maxPlayers > 0)
@@ -129,6 +148,12 @@
         if (string.IsNullOrWhiteSpace(_gameName))
         {
             ShowError("Enter a name for your game");
+            return;
+        }
+
+        if (_playerNames.Count > _maxPlayers && _maxPlayers > 0)
+        {
+            ShowError($"Max Players ({_maxPlayers}) is less than the number of players added ({_playerNames.Count}). Increase Max Players or remove players.");
             return;
         }
 
