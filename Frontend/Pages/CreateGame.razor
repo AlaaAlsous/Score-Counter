@@ -18,7 +18,8 @@
             <input id="startScore" class="form-input" type="number" @bind="_startScore" />
 
             <label for="orderByPoints">What is the goal of the game?</label>
-            <select id="orderByPoints" class="form-select" @bind="_highScoreWins">
+            <select id="orderByPoints" class="form-select" value="@_highScoreWins.ToString().ToLower()"
+                    @onchange="e => _highScoreWins = bool.TryParse(e.Value?.ToString(), out var val) && val">
                 <option value="true">Get as many points as possible</option>
                 <option value="false">Get as few points as possible</option>
             </select>
