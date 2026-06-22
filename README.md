@@ -20,22 +20,32 @@
   <img src="Images/Match.png" width="300"/>
 </p>
 
+<p align="center">
+  <img src="Images/GoToMatch.png" width="300"/>
+</p>
+
+<p align="center">
+  <img src="Images/Final Results.png" width="300"/>
+</p>
+
 ## Beskrivning
 
 ScoreCounter är en realtidsapplikation för att skapa och hantera matcher med spelare och poäng.
 
 Systemet låter användare skapa matcher, lägga till spelare och uppdatera poäng i realtid med hjälp av SignalR.
-
 Alla ändringar uppdateras direkt i alla anslutna klienter.
 
 Systemet låter användare:
 
-- Skapa matcher
-- Lägga till och ta bort spelare
-- Uppdatera poäng i realtid
+- Skapa matcher med valfritt spelnamn, startpoäng, målpoäng och max spelare
+- Välja "högst poäng vinner" eller "lägst poäng vinner"
+- Lägga till och ta bort spelare (med bekräftelsedialog)
+- Uppdatera poäng i realtid med knappar (-1, -5, +1, +5) eller anpassad poäng
+- Se poänghistorik per spelare med tid, ändring och poäng
 - Klona eller återställa matcher
-- Avsluta matcher
-- Följa uppdateringar direkt via SignalR
+- Avsluta matcher och visa resultat med vinnare eller oavgjort (draw)
+- Dela matcher via QR-kod
+- Följa uppdateringar direkt via SignalR på alla enheter
 
 ---
 
@@ -44,35 +54,60 @@ Systemet låter användare:
 ### Matchhantering
 
 - Skapa match med valfritt spelnamn
-- Sätta max antal spelare
-- Låsa spelare
+- Sätta max antal spelare (med validering)
+- Sätta målpoäng (Max Score) som visas på matchen
+- Låsa möjligheten att lägga till fler spelare
 - Avsluta match
-- Klona match
+- Klona match (behåller spelare, inställningar och poäng)
 - Reset match till ursprungsläge
+- Resultat-popup med vinnare, oavgjort (draw) och fullständig placeringstabell
+- QR-kodsdelning för att gå direkt till matchen
+- Kopiera matchlänk
 
 ### Spelare
 
 - Lägg till spelare
-- Ta bort spelare
-- Byt namn
+- Ta bort spelare (med bekräftelsedialog)
+- Ta bort spelare direkt i Create Game-vyn
+- Byt namn (uppdateras även i poänghistoriken)
 - Kontroll av duplicerade namn
-- Poängsystem (öka / minska / sätt direkt)
+- Max Players-validering — kan inte sänkas under antal tillagda spelare
 
 ### Poängsystem
 
-- Öka poäng
-- Minska poäng
-- Sätt exakt poäng
+- Öka poäng (+1, +5)
+- Minska poäng (-1, -5)
+- Anpassad poängändring (ange valfritt antal)
+- Optimistisk UI-uppdatering — poängen visas direkt, återställs vid fel
 - Realtidsuppdatering
+
+### Poänghistorik
+
+- Alla poängändringar sparas i databasen (ScoreEntry)
+- Historik visas grupperad per spelare med tid, ändring och poäng (före → efter)
+- Uppdateras i realtid via SignalR
+- Historik rensas automatiskt när spelare tas bort
+- Namnbyte uppdateras i historiken
+
+### Gränssnitt
+
+- Dark / Light mode
+- Responsiv design (mobil, tablet, desktop)
+- Global loading spinner vid alla HTTP-anrop
+- Statusmeddelanden i färgad bar
+- Score-knappar med anpassat mörkt tema
 
 ### Realtid (SignalR)
 
+- ScoreChanged
+- ScoreHistoryEntry
 - PlayerAdded
 - PlayerRemoved
 - PlayerRenamed
-- ScoreChanged
-- MatchReset
+- ScoreHistoryRenamed
+- PlayerHistoryRemoved
 - MatchFinished
+- MatchReset
 
 ---
 
@@ -92,13 +127,15 @@ Projektet är uppdelat i tre huvuddelar:
 ### Frontend
 
 - Blazor WebAssembly
+- SignalR
 - Responsiv UI
 - Sidebar navigation
 - Realtidsuppdatering
+- QR-kodsgenerering via QRCoder
 
 ### Shared
 
-- Delade modeller (GameMatch, GamePlayer)
+- Delade modeller (GameMatch, GamePlayer, ScoreEntry)
 - DTOs (Data Transfer Objects)
 - Gemensamma regler och kontrakt
 - Säkerställer att backend och frontend använder samma datastruktur
@@ -114,6 +151,7 @@ Projektet är uppdelat i tre huvuddelar:
 - `POST /api/match/{id}/reset` → Reset match
 - `POST /api/match/{id}/clone` → Klona match
 - `POST /api/match/{id}/finish` → Avsluta match
+- `GET /api/match/{id}/history` → Hämta poänghistorik
 
 ---
 
@@ -139,22 +177,23 @@ Endpoint: /matchevents
 - Anslut klienter via SignalR
 - Uppdatera poäng
 - Realtidsuppdatering till alla klienter
+- Poänghistorik sparas och synkas
 - Avsluta eller reset match
 
 ## Så här kör du programmet
 
 ```
-cd ScoreCounter
+cd Backend
 dotnet run
 ```
 
 ## Konfiguration
 
-- Lokal databas
+- Lokal databas (development):
   `Data Source=scorecounter.db`
-- Produktion
+- Produktion:
   - Azure SQL Server
-  - Azure Key Vault
+  - Azure Key Vault (hemlighet: `SqlScoreCounterConnectionString`)
 
 ## Publicering till Azure Portal
 
@@ -179,6 +218,14 @@ Programmet är förberett för att hostas på Microsoft Azure. Följ dessa steg 
    - Gå till Key Vault > Access control (IAM) > Lägg till rolltilldelning.
    - Välj rollen "Key Vault Secrets User" och välj din App Service som principal.
 
+### Deploya med skript
+
+```powershell
+.\deploy.ps1
+```
+
+Skriptet bygger både Frontend och Backend, publicerar och deployar via ZIP.
+
 ---
 
 ## Tekniker
@@ -189,6 +236,7 @@ Programmet är förberett för att hostas på Microsoft Azure. Följ dessa steg 
 - Entity Framework Core
 - SQLite / SQL Server
 - Azure
+- QRCoder
 
 ---
 
