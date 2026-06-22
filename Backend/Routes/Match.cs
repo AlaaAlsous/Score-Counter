@@ -66,6 +66,16 @@ public static class MatchEndpoints
                 PlayerNames = match.Players.Select(p => p.Name).ToList()
             };
             var clonedMatch = store.CreateMatch(cloneRequest);
+
+            foreach (var originalPlayer in match.Players)
+            {
+                var clonedPlayer = clonedMatch.Players.FirstOrDefault(p => p.Name == originalPlayer.Name);
+                if (clonedPlayer is not null && clonedPlayer.Score != originalPlayer.Score)
+                {
+                    store.UpdatePlayerScore(clonedMatch.Id, clonedPlayer.Id, originalPlayer.Score, null, null, out _, out _);
+                }
+            }
+
             var url = $"/match/{clonedMatch.Id}";
             return Results.Created(url, new MatchResponseDto { Id = clonedMatch.Id, Url = url });
         });
