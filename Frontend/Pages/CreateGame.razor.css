@@ -42,6 +42,21 @@
   font-size: 0.8rem;
 }
 
+.remove-player-btn {
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  border-radius: 50%;
+  color: var(--gray-400);
+  transition: all var(--transition);
+  margin-left: 0.1rem;
+}
+
+.remove-player-btn:hover {
+  color: red;
+}
+
 .checkbox-label {
   display: flex !important;
   align-items: center;

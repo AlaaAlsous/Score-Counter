@@ -53,7 +53,10 @@
                 <ul class="player-list">
                     @foreach (var name in _playerNames)
                     {
-                        <li>@name</li>
+                        <li>
+                            @name
+                            <span class="remove-player-btn" @onclick="() => RemovePlayer(name)" @onclick:preventDefault @onclick:stopPropagation="true" title="Remove">✕</span>
+                        </li>
                     }
                 </ul>
             }
@@ -187,6 +190,11 @@
                 NavManager.NavigateTo("/");
             }
         }
+    }
+
+    void RemovePlayer(string name)
+    {
+        _playerNames.Remove(name);
     }
 
     void HandleKey(KeyboardEventArgs e)
