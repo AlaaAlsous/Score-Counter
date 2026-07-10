@@ -98,32 +98,78 @@ else
                         {
                             <tr @key="player.Id">
                                 <td>
-                                    <input value="@(_editingPlayerId == player.Id ? _editingName : player.Name)"
-                                           readonly="@_match.IsFinished"
-                                           class="player-name-input"
-                                           @oninput="e => StartEditName(player, e.Value?.ToString() ?? string.Empty)"
-                                           @onchange="e => ConfirmEditName(player)" />
+                                    <div class="player-name-cell">
+                                        <input value="@(_editingPlayerId == player.Id ? _editingName : player.Name)"
+                                               readonly="@_match.IsFinished"
+                                               class="player-name-input"
+                                               @oninput="e => StartEditName(player, e.Value?.ToString() ?? string.Empty)"
+                                               @onchange="e => ConfirmEditName(player)" />
+                                        @if (HasWon41(player))
+                                        {
+                                            <span class="win-badge">🏆 You win!</span>
+                                        }
+                                    </div>
                                 </td>
                                 <td><span class="score-display">@player.Score</span></td>
                                 <td>
                                     @if (!_match.IsFinished)
                                     {
-                                        <div class="score-actions">
-                                            <button class="score-btn score-btn-minus" @onclick="() => ChangeScore(player, -1)">-1</button>
-                                            <button class="score-btn score-btn-minus" @onclick="() => ChangeScore(player, -5)">-5</button>
-                                            <button class="score-btn score-btn-plus" @onclick="() => ChangeScore(player, 1)">+1</button>
-                                            <button class="score-btn score-btn-plus" @onclick="() => ChangeScore(player, 5)">+5</button>
-                                            <span class="custom-score-group">
-                                                <input type="number"
-                                                       class="custom-score-input"
-                                                       value="@GetCustomAmount(player.Id)"
-                                                       @oninput="e => SetCustomAmount(player.Id, e.Value?.ToString())"
-                                                       placeholder="?"
-                                                       min="0" />
-                                                <button class="score-btn score-btn-minus" @onclick="() => HandleCustomScore(player, false)">-</button>
-                                                <button class="score-btn score-btn-plus" @onclick="() => HandleCustomScore(player, true)">+</button>
-                                            </span>
-                                        </div>
+                                        @if (Is41Mode)
+                                        {
+                                            <div class="score-actions mode-41">
+                                                <div class="mode-41-selected-info">
+                                                    @if (GetSelectedValue(player.Id) != 0)
+                                                    {
+                                                        <span class="selected-value-display">Selected: <strong>@GetSelectedValue(player.Id)</strong></span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="selected-value-display placeholder">Choose a number</span>
+                                                    }
+                                                </div>
+                                                <div class="value-buttons">
+                                                    @foreach (var val in _41Values)
+                                                    {
+                                                        <button class="value-btn @(GetSelectedValue(player.Id) == val ? "selected" : "")"
+                                                                @onclick="() => SelectValue(player.Id, val)">
+                                                            @val
+                                                        </button>
+                                                    }
+                                                </div>
+                                                <div class="mode-41-actions">
+                                                    <button class="score-btn score-btn-minus" @onclick="() => Handle41Score(player, false)"
+                                                            disabled="@(GetSelectedValue(player.Id) == 0)">−</button>
+                                                    <button class="score-btn score-btn-plus" @onclick="() => Handle41Score(player, true)"
+                                                            disabled="@(GetSelectedValue(player.Id) == 0)">+</button>
+                                                </div>
+                                                <div class="smile-container">
+                                                    <span class="smile-emoji @(player.Score < 0 ? "sad" : "")" style="font-size: @(GetSmileSize(player.Score))rem;">@(player.Score < 0 ? "😢" : "😊")</span>
+                                                </div>
+                                                <div class="progress-41">
+                                                    <div class="progress-41-bar" style="width: @(Math.Min(100, Math.Max(0, (double)player.Score / 41 * 100)))%"></div>
+                                                    <span class="progress-41-text">@player.Score / 41</span>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="score-actions">
+                                                <button class="score-btn score-btn-minus" @onclick="() => ChangeScore(player, -1)">-1</button>
+                                                <button class="score-btn score-btn-minus" @onclick="() => ChangeScore(player, -5)">-5</button>
+                                                <button class="score-btn score-btn-plus" @onclick="() => ChangeScore(player, 1)">+1</button>
+                                                <button class="score-btn score-btn-plus" @onclick="() => ChangeScore(player, 5)">+5</button>
+                                                <span class="custom-score-group">
+                                                    <input type="number"
+                                                           class="custom-score-input"
+                                                           value="@GetCustomAmount(player.Id)"
+                                                           @oninput="e => SetCustomAmount(player.Id, e.Value?.ToString())"
+                                                           placeholder="?"
+                                                           min="0" />
+                                                    <button class="score-btn score-btn-minus" @onclick="() => HandleCustomScore(player, false)">-</button>
+                                                    <button class="score-btn score-btn-plus" @onclick="() => HandleCustomScore(player, true)">+</button>
+                                                </span>
+                                            </div>
+                                        }
                                     }
                                 </td>
                                 <td>
@@ -353,6 +399,43 @@ else
     private string _qrCodeSvg = string.Empty;
     private Dictionary<Guid, int> _customScoreAmounts = new();
     private List<ScoreEntry> _scoreHistory = new();
+
+    private readonly int[] _41Values = [2, 3, 4, 10, 14, 27];
+    private readonly Dictionary<Guid, int> _selectedValues = new();
+
+    private bool Is41Mode => _match?.MaxScore == 41;
+
+    private int GetSelectedValue(Guid playerId) =>
+        _selectedValues.TryGetValue(playerId, out var val) ? val : 0;
+
+    private void SelectValue(Guid playerId, int val)
+    {
+        _selectedValues[playerId] = val;
+    }
+
+    private async Task Handle41Score(GamePlayer player, bool increase)
+    {
+        var selected = GetSelectedValue(player.Id);
+        if (selected == 0)
+        {
+            ShowError("Select a number first (2, 3, 4, 10, 14, or 27).");
+            return;
+        }
+        var delta = increase ? selected : -selected;
+        await ChangeScore(player, delta);
+
+        _selectedValues.Remove(player.Id);
+        StateHasChanged();
+    }
+
+    private bool HasWon41(GamePlayer player) => Is41Mode && player.Score >= 41;
+
+    private string GetSmileSize(int score)
+    {
+        var size = 1.2 + Math.Abs(score) * 0.08;
+        if (size > 4) size = 4;
+        return size.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     private IEnumerable<IGrouping<string, ScoreEntry>> HistoryByPlayer =>
         _scoreHistory
