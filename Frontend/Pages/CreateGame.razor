@@ -18,7 +18,16 @@
             <input id="startScore" class="form-input" type="number" @bind="_startScore" />
 
             <label for="maxScore">Max Score (optional)</label>
-            <input id="maxScore" class="form-input" type="number" @bind="_maxScore" min="0" placeholder="Leave empty for no limit" />
+            <input id="maxScore" class="form-input" type="number" @bind="MaxScore" min="0" placeholder="Leave empty for no limit" />
+
+            @if (_maxScore == 41)
+            {
+                <div class="alert alert-info">
+                    🎯 Special 41-mode: 4 players required, each player chooses between 2, 3, 4, 10, 14, 27.
+                    <br />
+                    <strong>Players added: @_playerNames.Count / 4</strong>
+                </div>
+            }
 
             <label for="orderByPoints">What is the goal of the game?</label>
             <select id="orderByPoints" class="form-select" value="@_highScoreWins.ToString().ToLower()"
@@ -66,9 +75,16 @@
                 Lock the ability to add more players once the match has started
             </label>
 
-            <button type="submit" class="btn btn-primary" @onclick="CreateNewGame">
+            <button type="submit" class="btn btn-primary" @onclick="CreateNewGame"
+                    disabled="@(_maxScore == 41 && _playerNames.Count != 4)">
                 <span>Create Match</span>
             </button>
+            @if (_maxScore == 41 && _playerNames.Count != 4)
+            {
+                <div class="alert alert-danger" style="margin-top: 0.5rem;">
+                    Add exactly 4 players to create a 41-mode match (@_playerNames.Count/4 added).
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -96,6 +112,20 @@
     int? _maxScore;
     private bool _showErrorPopup = false;
     private string _errorMessage = string.Empty;
+
+    private int? MaxScore
+    {
+        get => _maxScore;
+        set
+        {
+            _maxScore = value;
+            if (value == 41)
+            {
+                _maxPlayers = 4;
+                _playersLocked = true;
+            }
+        }
+    }
 
     private int MaxPlayers
     {
@@ -155,6 +185,12 @@
         if (string.IsNullOrWhiteSpace(_gameName))
         {
             ShowError("Enter a name for your game");
+            return;
+        }
+
+        if (_maxScore == 41 && _playerNames.Count != 4)
+        {
+            ShowError("41-mode requires exactly 4 players. Please add 4 players before creating the match.");
             return;
         }
 
