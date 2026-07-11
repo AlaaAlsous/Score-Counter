@@ -411,8 +411,35 @@ else
     private void SelectValue(Guid playerId, int val)
     {
         _selectedValues[playerId] = val;
+        _ = SaveSelectedValues();
     }
-
+    private async Task SaveSelectedValues()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(_selectedValues);
+            await JS.InvokeVoidAsync("localStorage.setItem", $"match_{Id}_selectedValues", json);
+        }
+        catch { }
+    }
+    private async Task LoadSelectedValues()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string>("localStorage.getItem", $"match_{Id}_selectedValues");
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                var loaded = System.Text.Json.JsonSerializer.Deserialize<Dictionary<Guid, int>>(json);
+                if (loaded is not null)
+                {
+                    _selectedValues.Clear();
+                    foreach (var kvp in loaded)
+                        _selectedValues[kvp.Key] = kvp.Value;
+                }
+            }
+        }
+        catch { }
+    }
     private async Task Handle41Score(GamePlayer player, bool increase)
     {
         var selected = GetSelectedValue(player.Id);
@@ -425,6 +452,7 @@ else
         await ChangeScore(player, delta);
 
         _selectedValues.Remove(player.Id);
+        _ = SaveSelectedValues();
         StateHasChanged();
     }
 
@@ -616,6 +644,8 @@ else
 
             _match = await Http.GetFromJsonAsync<GameMatch>($"/api/match/{Id}");
             _scoreHistory = await Http.GetFromJsonAsync<List<ScoreEntry>>($"/api/match/{Id}/history") ?? new();
+
+            await LoadSelectedValues();
 
             if (_match is null)
             {
