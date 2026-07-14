@@ -759,7 +759,10 @@
   background: var(--white);
   color: var(--gray-600);
   cursor: pointer;
-  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition),
+    border-color var(--transition);
   line-height: 1;
   text-align: center;
 }
@@ -815,6 +818,7 @@
   display: inline-block;
   transition: font-size 0.3s ease;
   line-height: 1;
+  align-self: center;
 }
 
 .smile-emoji.sad {
@@ -866,7 +870,7 @@
 }
 
 [data-theme="dark"] .progress-41-text {
-  color: var(--white);
+  color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -890,5 +894,8 @@
     padding: 0.6rem 1.2rem;
     font-size: 1.2rem;
     min-height: 2.8rem;
+  }
+  .smile-container {
+    height: 5rem;
   }
 }
