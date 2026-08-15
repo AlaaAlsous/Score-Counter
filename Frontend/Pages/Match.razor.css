@@ -899,3 +899,7 @@
     height: 5rem;
   }
 }
+
+.progress-41-bar.negative {
+  background: linear-gradient(90deg, var(--danger) 0%, #f87171 100%);
+}

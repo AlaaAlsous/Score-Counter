@@ -146,7 +146,7 @@ else
                                                     <span class="smile-emoji @(player.Score < 0 ? "sad" : "")" style="font-size: @(GetSmileSize(player.Score))rem;">@(player.Score < 0 ? "😢" : "😊")</span>
                                                 </div>
                                                 <div class="progress-41">
-                                                    <div class="progress-41-bar" style="width: @(Math.Min(100, Math.Max(0, (double)player.Score / 41 * 100)))%"></div>
+                                                    <div class="progress-41-bar @(player.Score < 0 ? "negative" : "")" style="width: @(Math.Min(100, Math.Max(0, (double)Math.Abs(player.Score) / 41 * 100)))%"></div>
                                                     <span class="progress-41-text">@player.Score / 41</span>
                                                 </div>
                                             </div>
