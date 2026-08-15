@@ -400,7 +400,7 @@ else
     private Dictionary<Guid, int> _customScoreAmounts = new();
     private List<ScoreEntry> _scoreHistory = new();
 
-    private readonly int[] _41Values = [2, 3, 4, 10, 14, 27];
+    private readonly int[] _41Values = [2, 3, 4, 10, 12, 14, 27];
     private readonly Dictionary<Guid, int> _selectedValues = new();
 
     private bool Is41Mode => _match?.MaxScore == 41;
@@ -445,7 +445,7 @@ else
         var selected = GetSelectedValue(player.Id);
         if (selected == 0)
         {
-            ShowError("Select a number first (2, 3, 4, 10, 14, or 27).");
+            ShowError("Select a number first (2, 3, 4, 10, 12, 14, or 27).");
             return;
         }
         var delta = increase ? selected : -selected;
